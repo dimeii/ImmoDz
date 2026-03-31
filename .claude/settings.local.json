@@ -16,7 +16,9 @@
       "Bash(npm ls:*)",
       "Bash(openssl rand:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(ls -la /c/DEV/ImmoDz/*.md)",
+      "Bash(\"H:\\\\Program Files\\\\PostgreSQL\\\\25\\\\bin\\\\psql\" -U admin -h localhost -d postgres -c \"SELECT version\\(\\);\")"
     ]
   }
 }

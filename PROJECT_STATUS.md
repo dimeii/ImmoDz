@@ -90,7 +90,7 @@ Fichier créé. À remplir :
 
 ```env
 # Base de données (obligatoire pour fonctionner)
-DATABASE_URL="postgresql://user:password@localhost:5432/immodz"
+DATABASE_URL="postgresql://postgresql:admin@localhost:5432/immodz"
 
 # NextAuth (prêt, secret généré)
 NEXTAUTH_SECRET="fN5kXDBWWiPjnb5hlk08EVnK0LrHVkNoAhz+a5o/qrA="
