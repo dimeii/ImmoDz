@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx:*)",
+      "Read(//c/DEV/**)",
+      "Bash(mv ImmoDz immodz-temp)",
+      "Bash(npm init:*)",
+      "Bash(npm pkg:*)",
+      "Bash(npm install:*)",
+      "Bash(npm view:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(grep -r \"TODO\\\\|FIXME\\\\|XXX\\\\|HACK\" src/ --include=*.ts --include=*.tsx)",
+      "Bash(npm run:*)",
+      "Bash(taskkill //F //IM node.exe)",
+      "Bash(npm ls:*)",
+      "Bash(openssl rand:*)"
+    ]
+  }
+}

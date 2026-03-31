@@ -1,0 +1,244 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  AGENCY_DIRECTOR
+  AGENCY_EMPLOYEE
+  USER
+}
+
+enum TransactionType {
+  RENT
+  SALE
+}
+
+enum PropertyType {
+  APARTMENT
+  HOUSE
+  VILLA
+  STUDIO
+  LAND
+  COMMERCIAL
+  OFFICE
+  GARAGE
+  OTHER
+}
+
+enum ListingStatus {
+  DRAFT
+  PENDING
+  ACTIVE
+  REJECTED
+  ARCHIVED
+}
+
+enum RoomCategory {
+  LIVING_ROOM
+  BEDROOM
+  KITCHEN
+  BATHROOM
+  EXTERIOR
+  OTHER
+}
+
+// ─── Auth (NextAuth v5) ──────────────────────────────────
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ─── Users ───────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  phone         String?
+  role          Role      @default(USER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts         Account[]
+  sessions         Session[]
+  listings         Listing[]
+  agencyMembers    AgencyMember[]
+  contactsSent     ContactRequest[] @relation("ContactSender")
+  contactsReceived ContactRequest[] @relation("ContactReceiver")
+
+  @@map("users")
+}
+
+// ─── Agency ──────────────────────────────────────────────
+
+model Agency {
+  id          String   @id @default(cuid())
+  name        String
+  description String?  @db.Text
+  logo        String?
+  phone       String?
+  email       String?
+  address     String?
+  wilayaCode  Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  wilaya  Wilaya?        @relation(fields: [wilayaCode], references: [code])
+  members AgencyMember[]
+
+  @@map("agencies")
+}
+
+model AgencyMember {
+  id       String   @id @default(cuid())
+  userId   String
+  agencyId String
+  role     Role     @default(AGENCY_EMPLOYEE)
+  joinedAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  agency Agency @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, agencyId])
+  @@map("agency_members")
+}
+
+// ─── Listings ────────────────────────────────────────────
+
+model Listing {
+  id              String          @id @default(cuid())
+  title           String
+  description     String          @db.Text
+  price           Float
+  transactionType TransactionType
+  propertyType    PropertyType
+  status          ListingStatus   @default(DRAFT)
+
+  // Adresse
+  address    String?
+  wilayaCode Int
+  commune    String?
+
+  // Caractéristiques
+  surface     Float?
+  rooms       Int?
+  bedrooms    Int?
+  bathrooms   Int?
+  floor       Int?
+  totalFloors Int?
+  yearBuilt   Int?
+  hasElevator Boolean @default(false)
+  hasParking  Boolean @default(false)
+  hasGarden   Boolean @default(false)
+  hasPool     Boolean @default(false)
+  isFurnished Boolean @default(false)
+
+  // Relations
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // NOTE: PostGIS location column (GEOGRAPHY(Point,4326)) ajoutée manuellement
+  // Voir CLAUDE.md Gotchas #1
+
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wilaya          Wilaya           @relation(fields: [wilayaCode], references: [code])
+  photos          ListingPhoto[]
+  contactRequests ContactRequest[]
+
+  @@index([status, transactionType, propertyType])
+  @@index([wilayaCode])
+  @@index([price])
+  @@map("listings")
+}
+
+model ListingPhoto {
+  id        String       @id @default(cuid())
+  listingId String
+  url       String
+  publicId  String
+  category  RoomCategory @default(OTHER)
+  order     Int          @default(0)
+  createdAt DateTime     @default(now())
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([listingId, order])
+  @@map("listing_photos")
+}
+
+// ─── Contact ─────────────────────────────────────────────
+
+model ContactRequest {
+  id         String   @id @default(cuid())
+  listingId  String
+  senderId   String
+  receiverId String
+  message    String   @db.Text
+  phone      String?
+  createdAt  DateTime @default(now())
+
+  listing  Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  sender   User    @relation("ContactSender", fields: [senderId], references: [id])
+  receiver User    @relation("ContactReceiver", fields: [receiverId], references: [id])
+
+  @@map("contact_requests")
+}
+
+// ─── Référence ───────────────────────────────────────────
+
+model Wilaya {
+  code     Int       @id
+  name     String
+  nameAr   String?
+  listings Listing[]
+  agencies Agency[]
+
+  @@map("wilayas")
+}
