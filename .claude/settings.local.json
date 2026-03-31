@@ -14,7 +14,9 @@
       "Bash(npm run:*)",
       "Bash(taskkill //F //IM node.exe)",
       "Bash(npm ls:*)",
-      "Bash(openssl rand:*)"
+      "Bash(openssl rand:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   }
 }
