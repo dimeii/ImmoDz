@@ -7,10 +7,10 @@ export default function Navbar() {
   const { data: session } = useSession();
 
   return (
-    <nav className="border-b bg-white">
+    <nav className="border-b-4 border-primary-950 bg-white shadow-lg">
       <div className="container mx-auto flex items-center justify-between px-4 py-3">
-        <Link href="/" className="text-2xl font-bold text-primary-600">
-          ImmoDz
+        <Link href="/" className="text-3xl font-black text-primary-950 hover:text-primary-900 transition-all">
+          🏠 ImmoDz
         </Link>
 
         <div className="flex items-center gap-4">
@@ -18,36 +18,36 @@ export default function Navbar() {
             <>
               <Link
                 href="/annonces/nouvelle"
-                className="rounded-md bg-primary-600 px-4 py-2 text-sm text-white hover:bg-primary-700"
+                className="rounded-md bg-primary-950 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-900 shadow-md transition-all hover:shadow-lg"
               >
-                Déposer une annonce
+                ➕ Déposer une annonce
               </Link>
               <Link
                 href="/dashboard"
-                className="text-sm text-gray-600 hover:text-gray-900"
+                className="text-sm font-medium text-primary-950 hover:text-primary-900 transition-colors"
               >
-                Mon compte
+                👤 Mon compte
               </Link>
               <button
                 onClick={() => signOut()}
-                className="text-sm text-gray-500 hover:text-gray-700"
+                className="text-sm font-medium text-primary-950 hover:text-primary-900 transition-colors"
               >
-                Déconnexion
+                🚪 Déconnexion
               </button>
             </>
           ) : (
             <>
               <Link
                 href="/login"
-                className="text-sm text-gray-600 hover:text-gray-900"
+                className="text-sm font-medium text-primary-950 hover:text-primary-900 transition-colors"
               >
-                Connexion
+                🔐 Connexion
               </Link>
               <Link
                 href="/register"
-                className="rounded-md bg-primary-600 px-4 py-2 text-sm text-white hover:bg-primary-700"
+                className="rounded-md bg-primary-950 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-900 shadow-md transition-all hover:shadow-lg"
               >
-                Inscription
+                ✍️ Inscription
               </Link>
             </>
           )}

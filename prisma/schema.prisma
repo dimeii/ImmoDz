@@ -184,6 +184,10 @@ model Listing {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Coordonnées GPS (fallback sans PostGIS)
+  latitude  Float?
+  longitude Float?
+
   // NOTE: PostGIS location column (GEOGRAPHY(Point,4326)) ajoutée manuellement
   // Voir CLAUDE.md Gotchas #1
 

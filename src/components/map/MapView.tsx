@@ -8,11 +8,11 @@ import "mapbox-gl/dist/mapbox-gl.css";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
 
-// Centre de l'Algérie
-const DEFAULT_CENTER: [number, number] = [2.6325, 28.1636];
-const DEFAULT_ZOOM = 5;
+// Centre d'Alger
+const DEFAULT_CENTER: [number, number] = [3.0588, 36.737];
+const DEFAULT_ZOOM = 11;
 
-interface PinProperties {
+export interface PinProperties {
   id: string;
   title: string;
   price: number;
@@ -28,12 +28,19 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 interface MapViewProps {
   filters?: Record<string, string>;
   onBoundsChange?: (bounds: [number, number, number, number]) => void;
+  onPinClick?: (listings: PinProperties[]) => void;
 }
 
-export default function MapView({ filters, onBoundsChange }: MapViewProps) {
+export default function MapView({
+  filters,
+  onBoundsChange,
+  onPinClick,
+}: MapViewProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const clusterRef = useRef<Supercluster<PinProperties> | null>(null);
+  const featuresRef = useRef<GeoPoint[]>([]);
   const [bounds, setBounds] = useState<string>("");
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
 
@@ -103,7 +110,10 @@ export default function MapView({ filters, onBoundsChange }: MapViewProps) {
       maxZoom: 16,
     });
 
-    cluster.load(geojson.features as GeoPoint[]);
+    const points = geojson.features as GeoPoint[];
+    cluster.load(points);
+    clusterRef.current = cluster;
+    featuresRef.current = points;
 
     const b = map.current.getBounds();
     if (!b) return;
@@ -119,31 +129,67 @@ export default function MapView({ filters, onBoundsChange }: MapViewProps) {
       const el = document.createElement("div");
 
       if (props.cluster) {
-        // Cluster pin
+        // Cluster pin — cercle vert avec nombre
         const count = props.point_count as number;
-        el.className =
-          "flex items-center justify-center rounded-full bg-blue-500 text-white text-sm font-bold shadow-lg cursor-pointer";
-        el.style.width = `${32 + Math.min(count, 100) * 0.3}px`;
-        el.style.height = `${32 + Math.min(count, 100) * 0.3}px`;
+        const size = 36 + Math.min(count, 50) * 0.5;
+        el.style.width = `${size}px`;
+        el.style.height = `${size}px`;
+        el.style.borderRadius = "50%";
+        el.style.background = "#007B30";
+        el.style.border = "3px solid white";
+        el.style.color = "white";
+        el.style.display = "flex";
+        el.style.alignItems = "center";
+        el.style.justifyContent = "center";
+        el.style.fontSize = "13px";
+        el.style.fontWeight = "700";
+        el.style.cursor = "pointer";
+        el.style.boxShadow = "0 2px 8px rgba(0,0,0,0.3)";
         el.textContent = String(count);
 
         el.addEventListener("click", () => {
-          const expansionZoom = cluster.getClusterExpansionZoom(
-            feature.id as number
+          if (!clusterRef.current) return;
+          // Récupérer toutes les annonces du cluster
+          const leaves = clusterRef.current.getLeaves(
+            feature.id as number,
+            Infinity
           );
-          map.current?.flyTo({ center: [lng, lat], zoom: expansionZoom });
+          const listings = leaves.map(
+            (l) => l.properties as PinProperties
+          );
+          onPinClick?.(listings);
         });
       } else {
-        // Single pin
-        const price = props.price as number;
+        // Single pin — petit cercle vert avec wrapper pour le hover
         const isSale = props.transactionType === "SALE";
-        el.className = `rounded-full px-2 py-1 text-xs font-semibold text-white shadow-md cursor-pointer ${
-          isSale ? "bg-green-600" : "bg-blue-600"
-        }`;
-        el.textContent = `${price.toLocaleString("fr-DZ")} ${isSale ? "DA" : "DA/m"}`;
+        el.style.width = "24px";
+        el.style.height = "24px";
+        el.style.display = "flex";
+        el.style.alignItems = "center";
+        el.style.justifyContent = "center";
+        el.style.cursor = "pointer";
+
+        const dot = document.createElement("div");
+        dot.style.width = "16px";
+        dot.style.height = "16px";
+        dot.style.borderRadius = "50%";
+        dot.style.background = isSale ? "#C9082A" : "#007B30";
+        dot.style.border = "3px solid white";
+        dot.style.boxShadow = "0 2px 6px rgba(0,0,0,0.3)";
+        dot.style.transition = "width 150ms, height 150ms";
+        el.appendChild(dot);
+
+        el.addEventListener("mouseenter", () => {
+          dot.style.width = "22px";
+          dot.style.height = "22px";
+        });
+        el.addEventListener("mouseleave", () => {
+          dot.style.width = "16px";
+          dot.style.height = "16px";
+        });
 
         el.addEventListener("click", () => {
-          window.location.href = `/annonces/${props.id}`;
+          onPinClick?.([props as unknown as PinProperties]);
         });
       }
 
@@ -153,9 +199,7 @@ export default function MapView({ filters, onBoundsChange }: MapViewProps) {
 
       markersRef.current.push(marker);
     }
-  }, [geojson, zoom]);
+  }, [geojson, zoom, onPinClick]);
 
-  return (
-    <div ref={mapContainer} className="h-full w-full rounded-lg" />
-  );
+  return <div ref={mapContainer} className="h-full w-full" />;
 }
