@@ -1,0 +1,475 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import useSWR from "swr";
+
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
+
+const propertyTypes = [
+  { value: "APARTMENT", label: "Appartement" },
+  { value: "HOUSE", label: "Maison" },
+  { value: "VILLA", label: "Villa" },
+  { value: "STUDIO", label: "Studio" },
+  { value: "LAND", label: "Terrain" },
+  { value: "COMMERCIAL", label: "Commercial" },
+  { value: "OFFICE", label: "Bureau" },
+  { value: "GARAGE", label: "Garage" },
+  { value: "OTHER", label: "Autre" },
+];
+
+interface ListingFormProps {
+  mode: "create" | "edit";
+  listing?: {
+    id: string;
+    title: string;
+    description: string;
+    price: number;
+    transactionType: "RENT" | "SALE";
+    propertyType: string;
+    wilayaCode: number;
+    commune?: string | null;
+    address?: string | null;
+    surface?: number | null;
+    rooms?: number | null;
+    bedrooms?: number | null;
+    bathrooms?: number | null;
+    floor?: number | null;
+    totalFloors?: number | null;
+    yearBuilt?: number | null;
+    hasElevator: boolean;
+    hasParking: boolean;
+    hasGarden: boolean;
+    hasPool: boolean;
+    isFurnished: boolean;
+    latitude?: number | null;
+    longitude?: number | null;
+  };
+}
+
+export default function ListingForm({ mode, listing }: ListingFormProps) {
+  const router = useRouter();
+  const { data: wilayasData } = useSWR("/api/wilayas", fetcher);
+  const wilayas: { code: number; name: string }[] = wilayasData ?? [];
+
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  // Form state
+  const [title, setTitle] = useState(listing?.title ?? "");
+  const [description, setDescription] = useState(listing?.description ?? "");
+  const [price, setPrice] = useState(listing?.price?.toString() ?? "");
+  const [transactionType, setTransactionType] = useState<"RENT" | "SALE">(
+    listing?.transactionType ?? "RENT"
+  );
+  const [propertyType, setPropertyType] = useState(
+    listing?.propertyType ?? "APARTMENT"
+  );
+  const [wilayaCode, setWilayaCode] = useState(
+    listing?.wilayaCode?.toString() ?? ""
+  );
+  const [commune, setCommune] = useState(listing?.commune ?? "");
+  const [address, setAddress] = useState(listing?.address ?? "");
+  const [surface, setSurface] = useState(listing?.surface?.toString() ?? "");
+  const [rooms, setRooms] = useState(listing?.rooms?.toString() ?? "");
+  const [bedrooms, setBedrooms] = useState(
+    listing?.bedrooms?.toString() ?? ""
+  );
+  const [bathrooms, setBathrooms] = useState(
+    listing?.bathrooms?.toString() ?? ""
+  );
+  const [floor, setFloor] = useState(listing?.floor?.toString() ?? "");
+  const [totalFloors, setTotalFloors] = useState(
+    listing?.totalFloors?.toString() ?? ""
+  );
+  const [yearBuilt, setYearBuilt] = useState(
+    listing?.yearBuilt?.toString() ?? ""
+  );
+  const [hasElevator, setHasElevator] = useState(
+    listing?.hasElevator ?? false
+  );
+  const [hasParking, setHasParking] = useState(listing?.hasParking ?? false);
+  const [hasGarden, setHasGarden] = useState(listing?.hasGarden ?? false);
+  const [hasPool, setHasPool] = useState(listing?.hasPool ?? false);
+  const [isFurnished, setIsFurnished] = useState(
+    listing?.isFurnished ?? false
+  );
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setFieldErrors({});
+    setSubmitting(true);
+
+    const body: Record<string, unknown> = {
+      title,
+      description,
+      price: Number(price),
+      transactionType,
+      propertyType,
+      wilayaCode: Number(wilayaCode),
+      hasElevator,
+      hasParking,
+      hasGarden,
+      hasPool,
+      isFurnished,
+    };
+
+    if (commune) body.commune = commune;
+    if (address) body.address = address;
+    if (surface) body.surface = Number(surface);
+    if (rooms) body.rooms = Number(rooms);
+    if (bedrooms) body.bedrooms = Number(bedrooms);
+    if (bathrooms) body.bathrooms = Number(bathrooms);
+    if (floor) body.floor = Number(floor);
+    if (totalFloors) body.totalFloors = Number(totalFloors);
+    if (yearBuilt) body.yearBuilt = Number(yearBuilt);
+
+    try {
+      const url =
+        mode === "create" ? "/api/annonces" : `/api/annonces/${listing!.id}`;
+      const method = mode === "create" ? "POST" : "PUT";
+
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        if (data.details?.issues) {
+          const errs: Record<string, string> = {};
+          for (const issue of data.details.issues) {
+            const field = issue.path?.[0];
+            if (field) errs[field] = issue.message;
+          }
+          setFieldErrors(errs);
+        }
+        setError(data.error || "Erreur lors de la soumission");
+        setSubmitting(false);
+        return;
+      }
+
+      router.push(`/annonces/${data.id}`);
+    } catch {
+      setError("Erreur réseau");
+      setSubmitting(false);
+    }
+  };
+
+  const inputClass =
+    "w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-950 focus:ring-1 focus:ring-primary-950 outline-none transition-colors";
+  const labelClass = "block text-sm font-medium text-gray-700 mb-1";
+  const errorClass = "text-xs text-red-600 mt-1";
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-8">
+      {error && (
+        <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      {/* ─── Section 1 : Infos principales ─── */}
+      <section>
+        <h3 className="text-base font-bold text-primary-950 mb-4 border-b border-primary-100 pb-2">
+          Informations principales
+        </h3>
+        <div className="space-y-4">
+          {/* Type de transaction */}
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => setTransactionType("RENT")}
+              className={`flex-1 rounded-lg px-4 py-3 text-sm font-semibold transition-colors ${
+                transactionType === "RENT"
+                  ? "bg-primary-950 text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              Location
+            </button>
+            <button
+              type="button"
+              onClick={() => setTransactionType("SALE")}
+              className={`flex-1 rounded-lg px-4 py-3 text-sm font-semibold transition-colors ${
+                transactionType === "SALE"
+                  ? "bg-accent-red text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              Vente
+            </button>
+          </div>
+
+          {/* Titre */}
+          <div>
+            <label className={labelClass}>Titre *</label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Ex: Bel appartement F3 - Hydra"
+              className={inputClass}
+              required
+            />
+            {fieldErrors.title && (
+              <p className={errorClass}>{fieldErrors.title}</p>
+            )}
+          </div>
+
+          {/* Type de bien */}
+          <div>
+            <label className={labelClass}>Type de bien *</label>
+            <select
+              value={propertyType}
+              onChange={(e) => setPropertyType(e.target.value)}
+              className={inputClass}
+            >
+              {propertyTypes.map((t) => (
+                <option key={t.value} value={t.value}>
+                  {t.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Prix */}
+          <div>
+            <label className={labelClass}>
+              Prix (DA) {transactionType === "RENT" && "/ mois"} *
+            </label>
+            <input
+              type="number"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              placeholder="Ex: 85000"
+              className={inputClass}
+              min="0"
+              required
+            />
+            {fieldErrors.price && (
+              <p className={errorClass}>{fieldErrors.price}</p>
+            )}
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className={labelClass}>Description *</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Décrivez votre bien en détail (min. 20 caractères)..."
+              className={inputClass + " h-32 resize-none"}
+              required
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              {description.length}/5000
+            </p>
+            {fieldErrors.description && (
+              <p className={errorClass}>{fieldErrors.description}</p>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Section 2 : Localisation ─── */}
+      <section>
+        <h3 className="text-base font-bold text-primary-950 mb-4 border-b border-primary-100 pb-2">
+          Localisation
+        </h3>
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className={labelClass}>Wilaya *</label>
+              <select
+                value={wilayaCode}
+                onChange={(e) => setWilayaCode(e.target.value)}
+                className={inputClass}
+                required
+              >
+                <option value="">Sélectionner...</option>
+                {wilayas.map((w) => (
+                  <option key={w.code} value={w.code}>
+                    {w.code} - {w.name}
+                  </option>
+                ))}
+              </select>
+              {fieldErrors.wilayaCode && (
+                <p className={errorClass}>{fieldErrors.wilayaCode}</p>
+              )}
+            </div>
+            <div>
+              <label className={labelClass}>Commune</label>
+              <input
+                type="text"
+                value={commune}
+                onChange={(e) => setCommune(e.target.value)}
+                placeholder="Ex: Hydra"
+                className={inputClass}
+              />
+            </div>
+          </div>
+          <div>
+            <label className={labelClass}>Adresse</label>
+            <input
+              type="text"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder="Ex: Rue des frères Bouchnak"
+              className={inputClass}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Section 3 : Caractéristiques ─── */}
+      <section>
+        <h3 className="text-base font-bold text-primary-950 mb-4 border-b border-primary-100 pb-2">
+          Caractéristiques
+        </h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          <div>
+            <label className={labelClass}>Surface (m²)</label>
+            <input
+              type="number"
+              value={surface}
+              onChange={(e) => setSurface(e.target.value)}
+              placeholder="110"
+              className={inputClass}
+              min="0"
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Pièces</label>
+            <input
+              type="number"
+              value={rooms}
+              onChange={(e) => setRooms(e.target.value)}
+              placeholder="3"
+              className={inputClass}
+              min="0"
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Chambres</label>
+            <input
+              type="number"
+              value={bedrooms}
+              onChange={(e) => setBedrooms(e.target.value)}
+              placeholder="2"
+              className={inputClass}
+              min="0"
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Salles de bain</label>
+            <input
+              type="number"
+              value={bathrooms}
+              onChange={(e) => setBathrooms(e.target.value)}
+              placeholder="1"
+              className={inputClass}
+              min="0"
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Etage</label>
+            <input
+              type="number"
+              value={floor}
+              onChange={(e) => setFloor(e.target.value)}
+              placeholder="4"
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Etages total</label>
+            <input
+              type="number"
+              value={totalFloors}
+              onChange={(e) => setTotalFloors(e.target.value)}
+              placeholder="10"
+              className={inputClass}
+              min="0"
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Année construction</label>
+            <input
+              type="number"
+              value={yearBuilt}
+              onChange={(e) => setYearBuilt(e.target.value)}
+              placeholder="2020"
+              className={inputClass}
+              min="1900"
+              max={new Date().getFullYear()}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Section 4 : Équipements ─── */}
+      <section>
+        <h3 className="text-base font-bold text-primary-950 mb-4 border-b border-primary-100 pb-2">
+          Equipements
+        </h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {[
+            {
+              label: "Ascenseur",
+              checked: hasElevator,
+              onChange: setHasElevator,
+            },
+            { label: "Parking", checked: hasParking, onChange: setHasParking },
+            { label: "Jardin", checked: hasGarden, onChange: setHasGarden },
+            { label: "Piscine", checked: hasPool, onChange: setHasPool },
+            { label: "Meublé", checked: isFurnished, onChange: setIsFurnished },
+          ].map((item) => (
+            <label
+              key={item.label}
+              className={`flex items-center gap-3 rounded-lg border px-4 py-3 cursor-pointer transition-colors ${
+                item.checked
+                  ? "bg-primary-50 border-primary-950 text-primary-950"
+                  : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"
+              }`}
+            >
+              <input
+                type="checkbox"
+                checked={item.checked}
+                onChange={(e) => item.onChange(e.target.checked)}
+                className="accent-primary-950"
+              />
+              <span className="text-sm font-medium">{item.label}</span>
+            </label>
+          ))}
+        </div>
+      </section>
+
+      {/* ─── Submit ─── */}
+      <div className="flex gap-4 pt-4 border-t border-gray-200">
+        <button
+          type="button"
+          onClick={() => router.back()}
+          className="px-6 py-3 rounded-lg border border-gray-300 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+        >
+          Annuler
+        </button>
+        <button
+          type="submit"
+          disabled={submitting}
+          className="flex-1 px-6 py-3 rounded-lg bg-primary-950 text-white text-sm font-semibold hover:bg-primary-900 transition-colors disabled:opacity-50"
+        >
+          {submitting
+            ? "Publication..."
+            : mode === "create"
+              ? "Publier l'annonce"
+              : "Enregistrer les modifications"}
+        </button>
+      </div>
+    </form>
+  );
+}

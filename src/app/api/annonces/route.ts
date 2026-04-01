@@ -85,18 +85,12 @@ export async function POST(request: NextRequest) {
     const annonce = await db.listing.create({
       data: {
         ...listingData,
+        latitude: lat,
+        longitude: lng,
         userId: session.user.id,
-        status: "PENDING",
+        status: "ACTIVE",
       },
     });
-
-    // Si lat/lng fournis, mettre à jour la colonne PostGIS
-    if (lat !== undefined && lng !== undefined) {
-      await db.$executeRaw`
-        UPDATE listings SET location = ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography
-        WHERE id = ${annonce.id}
-      `;
-    }
 
     return NextResponse.json(annonce, { status: 201 });
   } catch (error) {
