@@ -31,6 +31,11 @@ export const createListingSchema = z.object({
   hasGarden: z.boolean().optional(),
   hasPool: z.boolean().optional(),
   isFurnished: z.boolean().optional(),
+  hasStorefront: z.boolean().optional(),
+  hasWater: z.boolean().optional(),
+  hasElectricity: z.boolean().optional(),
+  hasGas: z.boolean().optional(),
+  hasFiber: z.boolean().optional(),
   lat: z.number().min(-90).max(90).optional(),
   lng: z.number().min(-180).max(180).optional(),
 });

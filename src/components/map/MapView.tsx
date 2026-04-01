@@ -12,6 +12,68 @@ const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
 const DEFAULT_CENTER: [number, number] = [3.0588, 36.737];
 const DEFAULT_ZOOM = 11;
 
+// Coordonnées des chefs-lieux des 58 wilayas [lng, lat]
+const WILAYA_CENTERS: Record<number, [number, number]> = {
+  1:  [-0.29, 27.87],  // Adrar
+  2:  [1.33, 36.16],   // Chlef
+  3:  [2.88, 33.80],   // Laghouat
+  4:  [7.11, 35.88],   // Oum El Bouaghi
+  5:  [6.17, 35.56],   // Batna
+  6:  [5.07, 36.75],   // Béjaïa
+  7:  [5.73, 34.85],   // Biskra
+  8:  [-2.22, 31.62],  // Béchar
+  9:  [2.83, 36.47],   // Blida
+  10: [3.90, 36.38],   // Bouira
+  11: [5.52, 22.79],   // Tamanrasset
+  12: [8.12, 35.40],   // Tébessa
+  13: [-1.32, 34.88],  // Tlemcen
+  14: [1.32, 35.37],   // Tiaret
+  15: [4.05, 36.71],   // Tizi Ouzou
+  16: [3.06, 36.74],   // Alger
+  17: [3.25, 34.67],   // Djelfa
+  18: [5.77, 36.82],   // Jijel
+  19: [5.41, 36.19],   // Sétif
+  20: [0.15, 34.83],   // Saïda
+  21: [6.91, 36.87],   // Skikda
+  22: [-0.64, 35.19],  // Sidi Bel Abbès
+  23: [7.77, 36.90],   // Annaba
+  24: [7.43, 36.46],   // Guelma
+  25: [6.61, 36.36],   // Constantine
+  26: [2.75, 36.26],   // Médéa
+  27: [0.09, 35.93],   // Mostaganem
+  28: [4.54, 35.70],   // M'Sila
+  29: [0.14, 35.40],   // Mascara
+  30: [5.33, 31.95],   // Ouargla
+  31: [-0.64, 35.70],  // Oran
+  32: [1.00, 33.68],   // El Bayadh
+  33: [8.48, 26.50],   // Illizi
+  34: [4.76, 36.07],   // Bordj Bou Arréridj
+  35: [3.47, 36.76],   // Boumerdès
+  36: [8.32, 36.77],   // El Tarf
+  37: [-8.13, 27.67],  // Tindouf
+  38: [1.81, 35.61],   // Tissemsilt
+  39: [6.86, 33.37],   // El Oued
+  40: [7.14, 35.43],   // Khenchela
+  41: [7.95, 36.29],   // Souk Ahras
+  42: [2.45, 36.59],   // Tipaza
+  43: [6.26, 36.45],   // Mila
+  44: [1.97, 36.26],   // Aïn Defla
+  45: [-0.30, 33.26],  // Naâma
+  46: [-1.14, 35.29],  // Aïn Témouchent
+  47: [3.68, 32.49],   // Ghardaïa
+  48: [0.94, 35.73],   // Relizane
+  49: [5.93, 33.95],   // El M'Ghair
+  50: [2.88, 30.58],   // El Menia
+  51: [5.07, 34.42],   // Ouled Djellal
+  52: [0.95, 21.33],   // Bordj Badji Mokhtar
+  53: [-2.17, 30.13],  // Béni Abbès
+  54: [0.23, 29.26],   // Timimoun
+  55: [6.06, 33.10],   // Touggourt
+  56: [9.48, 24.55],   // Djanet
+  57: [2.47, 27.19],   // In Salah
+  58: [5.77, 19.57],   // In Guezzam
+};
+
 export interface PinProperties {
   id: string;
   title: string;
@@ -96,6 +158,24 @@ export default function MapView({
       map.current = null;
     };
   }, [updateBounds]);
+
+  // Centrer la carte sur la wilaya sélectionnée
+  useEffect(() => {
+    if (!map.current) return;
+
+    const wilayaCode = filters?.wilayaCode;
+    if (!wilayaCode) {
+      // Retour à la vue par défaut si aucune wilaya sélectionnée
+      map.current.flyTo({ center: DEFAULT_CENTER, zoom: DEFAULT_ZOOM, duration: 1200 });
+      return;
+    }
+
+    const code = parseInt(wilayaCode, 10);
+    const center = WILAYA_CENTERS[code];
+    if (!center) return;
+
+    map.current.flyTo({ center, zoom: 12, duration: 1200 });
+  }, [filters?.wilayaCode]);
 
   // Clustering + markers
   useEffect(() => {

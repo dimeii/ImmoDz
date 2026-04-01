@@ -71,6 +71,11 @@ export default function EditAnnoncePage() {
           hasGarden: listing.hasGarden,
           hasPool: listing.hasPool,
           isFurnished: listing.isFurnished,
+          hasStorefront: listing.hasStorefront,
+          hasWater: listing.hasWater,
+          hasElectricity: listing.hasElectricity,
+          hasGas: listing.hasGas,
+          hasFiber: listing.hasFiber,
           latitude: listing.latitude,
           longitude: listing.longitude,
         }}

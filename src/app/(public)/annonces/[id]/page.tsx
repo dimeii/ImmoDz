@@ -137,6 +137,21 @@ export default async function AnnoncePage({
             {annonce.isFurnished && (
               <span className="rounded-full bg-gray-100 px-3 py-1 text-sm">Meublé</span>
             )}
+            {annonce.hasFiber && (
+              <span className="rounded-full bg-blue-100 text-blue-800 px-3 py-1 text-sm">Fibre optique</span>
+            )}
+            {annonce.hasStorefront && (
+              <span className="rounded-full bg-amber-100 text-amber-800 px-3 py-1 text-sm">Devanture</span>
+            )}
+            {annonce.hasWater && (
+              <span className="rounded-full bg-cyan-100 text-cyan-800 px-3 py-1 text-sm">Eau</span>
+            )}
+            {annonce.hasElectricity && (
+              <span className="rounded-full bg-yellow-100 text-yellow-800 px-3 py-1 text-sm">Électricité</span>
+            )}
+            {annonce.hasGas && (
+              <span className="rounded-full bg-orange-100 text-orange-800 px-3 py-1 text-sm">Gaz</span>
+            )}
           </div>
 
           {/* Description */}

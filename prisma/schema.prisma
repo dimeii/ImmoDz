@@ -179,6 +179,13 @@ model Listing {
   hasPool     Boolean @default(false)
   isFurnished Boolean @default(false)
 
+  // Commercial / Local
+  hasStorefront  Boolean @default(false) // Devanture
+  hasWater       Boolean @default(false) // Accès eau
+  hasElectricity Boolean @default(false) // Accès électricité
+  hasGas         Boolean @default(false) // Accès gaz
+  hasFiber       Boolean @default(false) // Fibre optique
+
   // Relations
   userId    String
   createdAt DateTime @default(now())

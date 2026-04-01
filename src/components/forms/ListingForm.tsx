@@ -1,10 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import useSWR from "swr";
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
+
+mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
 
 const propertyTypes = [
   { value: "APARTMENT", label: "Appartement" },
@@ -42,6 +46,11 @@ interface ListingFormProps {
     hasGarden: boolean;
     hasPool: boolean;
     isFurnished: boolean;
+    hasStorefront: boolean;
+    hasWater: boolean;
+    hasElectricity: boolean;
+    hasGas: boolean;
+    hasFiber: boolean;
     latitude?: number | null;
     longitude?: number | null;
   };
@@ -95,6 +104,119 @@ export default function ListingForm({ mode, listing }: ListingFormProps) {
   const [isFurnished, setIsFurnished] = useState(
     listing?.isFurnished ?? false
   );
+  const [hasStorefront, setHasStorefront] = useState(
+    listing?.hasStorefront ?? false
+  );
+  const [hasWater, setHasWater] = useState(listing?.hasWater ?? false);
+  const [hasElectricity, setHasElectricity] = useState(
+    listing?.hasElectricity ?? false
+  );
+  const [hasGas, setHasGas] = useState(listing?.hasGas ?? false);
+  const [hasFiber, setHasFiber] = useState(listing?.hasFiber ?? false);
+
+  // Géolocalisation
+  const [lat, setLat] = useState<number | null>(listing?.latitude ?? null);
+  const [lng, setLng] = useState<number | null>(listing?.longitude ?? null);
+  const [geocoding, setGeocoding] = useState(false);
+  const [geocodeError, setGeocodeError] = useState("");
+
+  // Mini-carte
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<mapboxgl.Map | null>(null);
+  const markerRef = useRef<mapboxgl.Marker | null>(null);
+
+  const updateMarker = useCallback((newLat: number, newLng: number) => {
+    setLat(newLat);
+    setLng(newLng);
+    if (markerRef.current) {
+      markerRef.current.setLngLat([newLng, newLat]);
+    } else if (mapRef.current) {
+      markerRef.current = new mapboxgl.Marker({ color: "#007b30", draggable: true })
+        .setLngLat([newLng, newLat])
+        .addTo(mapRef.current);
+      markerRef.current.on("dragend", () => {
+        const pos = markerRef.current!.getLngLat();
+        setLat(pos.lat);
+        setLng(pos.lng);
+      });
+    }
+  }, []);
+
+  // Initialiser la mini-carte
+  useEffect(() => {
+    if (!mapContainerRef.current || mapRef.current) return;
+
+    const map = new mapboxgl.Map({
+      container: mapContainerRef.current,
+      style: "mapbox://styles/mapbox/streets-v12",
+      center: [lng ?? 3.042, lat ?? 36.752],
+      zoom: lat && lng ? 14 : 5,
+    });
+
+    map.addControl(new mapboxgl.NavigationControl(), "top-right");
+
+    map.on("click", (e) => {
+      updateMarker(e.lngLat.lat, e.lngLat.lng);
+    });
+
+    if (lat && lng) {
+      updateMarker(lat, lng);
+    }
+
+    mapRef.current = map;
+
+    return () => {
+      map.remove();
+      mapRef.current = null;
+      markerRef.current = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Géocodage via Nominatim (OpenStreetMap, gratuit)
+  const handleGeocode = async () => {
+    const selectedWilaya = wilayas.find((w) => w.code === Number(wilayaCode));
+    const query = [address, commune, selectedWilaya?.name, "Algérie"]
+      .filter(Boolean)
+      .join(", ");
+
+    if (!query || !wilayaCode) {
+      setGeocodeError("Saisissez au moins une wilaya");
+      return;
+    }
+
+    setGeocoding(true);
+    setGeocodeError("");
+
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&countrycodes=dz`,
+        { headers: { "User-Agent": "ImmoDz/1.0" } }
+      );
+      const results = await res.json();
+
+      if (results.length === 0) {
+        setGeocodeError("Adresse non trouvée. Cliquez sur la carte pour placer le repère manuellement.");
+        return;
+      }
+
+      const { lat: rLat, lon: rLng } = results[0];
+      const newLat = parseFloat(rLat);
+      const newLng = parseFloat(rLng);
+
+      updateMarker(newLat, newLng);
+
+      if (mapRef.current) {
+        mapRef.current.flyTo({ center: [newLng, newLat], zoom: 15 });
+      }
+    } catch {
+      setGeocodeError("Erreur de géocodage. Placez le repère manuellement sur la carte.");
+    } finally {
+      setGeocoding(false);
+    }
+  };
+
+  const isCommercial = ["COMMERCIAL", "OFFICE"].includes(propertyType);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,8 +236,15 @@ export default function ListingForm({ mode, listing }: ListingFormProps) {
       hasGarden,
       hasPool,
       isFurnished,
+      hasStorefront,
+      hasWater,
+      hasElectricity,
+      hasGas,
+      hasFiber,
     };
 
+    if (lat != null) body.lat = lat;
+    if (lng != null) body.lng = lng;
     if (commune) body.commune = commune;
     if (address) body.address = address;
     if (surface) body.surface = Number(surface);
@@ -323,6 +452,38 @@ export default function ListingForm({ mode, listing }: ListingFormProps) {
               className={inputClass}
             />
           </div>
+
+          {/* Géocodage + Mini-carte */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className={labelClass + " mb-0"}>
+                Position sur la carte
+              </label>
+              <button
+                type="button"
+                onClick={handleGeocode}
+                disabled={geocoding}
+                className="px-4 py-1.5 rounded-lg bg-primary-100 text-primary-950 text-sm font-semibold hover:bg-primary-200 disabled:opacity-50 transition-colors"
+              >
+                {geocoding ? "Recherche..." : "Localiser l'adresse"}
+              </button>
+            </div>
+            {geocodeError && (
+              <p className="text-xs text-amber-600 mb-2">{geocodeError}</p>
+            )}
+            {lat && lng && (
+              <p className="text-xs text-green-700 mb-2">
+                Position : {lat.toFixed(5)}, {lng.toFixed(5)} — Déplacez le repère pour ajuster
+              </p>
+            )}
+            <div
+              ref={mapContainerRef}
+              className="w-full h-64 rounded-lg border border-gray-300 overflow-hidden"
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              Cliquez sur la carte ou utilisez le bouton &quot;Localiser&quot; pour positionner votre bien
+            </p>
+          </div>
         </div>
       </section>
 
@@ -428,6 +589,7 @@ export default function ListingForm({ mode, listing }: ListingFormProps) {
             { label: "Jardin", checked: hasGarden, onChange: setHasGarden },
             { label: "Piscine", checked: hasPool, onChange: setHasPool },
             { label: "Meublé", checked: isFurnished, onChange: setIsFurnished },
+            { label: "Fibre optique", checked: hasFiber, onChange: setHasFiber },
           ].map((item) => (
             <label
               key={item.label}
@@ -448,6 +610,56 @@ export default function ListingForm({ mode, listing }: ListingFormProps) {
           ))}
         </div>
       </section>
+
+      {/* ─── Section 5 : Options local commercial ─── */}
+      {isCommercial && (
+        <section>
+          <h3 className="text-base font-bold text-primary-950 mb-4 border-b border-primary-100 pb-2">
+            Options local commercial
+          </h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {[
+              {
+                label: "Devanture",
+                checked: hasStorefront,
+                onChange: setHasStorefront,
+              },
+              {
+                label: "Accès eau",
+                checked: hasWater,
+                onChange: setHasWater,
+              },
+              {
+                label: "Accès électricité",
+                checked: hasElectricity,
+                onChange: setHasElectricity,
+              },
+              {
+                label: "Accès gaz",
+                checked: hasGas,
+                onChange: setHasGas,
+              },
+            ].map((item) => (
+              <label
+                key={item.label}
+                className={`flex items-center gap-3 rounded-lg border px-4 py-3 cursor-pointer transition-colors ${
+                  item.checked
+                    ? "bg-primary-50 border-primary-950 text-primary-950"
+                    : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={item.checked}
+                  onChange={(e) => item.onChange(e.target.checked)}
+                  className="accent-primary-950"
+                />
+                <span className="text-sm font-medium">{item.label}</span>
+              </label>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ─── Submit ─── */}
       <div className="flex gap-4 pt-4 border-t border-gray-200">
