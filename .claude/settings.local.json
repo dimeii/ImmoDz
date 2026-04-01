@@ -18,7 +18,22 @@
       "Bash(git commit:*)",
       "Bash(git push:*)",
       "Bash(ls -la /c/DEV/ImmoDz/*.md)",
-      "Bash(\"H:\\\\Program Files\\\\PostgreSQL\\\\25\\\\bin\\\\psql\" -U admin -h localhost -d postgres -c \"SELECT version\\(\\);\")"
+      "Bash(\"H:\\\\Program Files\\\\PostgreSQL\\\\25\\\\bin\\\\psql\" -U admin -h localhost -d postgres -c \"SELECT version\\(\\);\")",
+      "Bash(curl -s http://localhost:3000)",
+      "Bash(curl -s http://localhost:3000/)",
+      "Bash(curl -s -I http://localhost:3000)",
+      "Bash(curl -s http://localhost:3003)",
+      "Bash(netstat -ano)",
+      "Bash(taskkill //F //PID 4488)",
+      "Bash(taskkill //F //PID 18320)",
+      "Bash(taskkill //F //PID 25420)",
+      "Bash(taskkill //F //PID 20188)",
+      "Bash(curl -s \"http://localhost:3000/api/map/pins?bounds=2.8,36.6,3.3,36.9&transactionType=RENT\")",
+      "Bash(taskkill //F //PID 9596)",
+      "Bash(curl -s \"http://localhost:3000/api/map/pins?bounds=2.7,36.6,3.5,36.9\")",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(len\\(d[''''features'''']\\), ''''pins''''\\)\")",
+      "Bash(curl -s http://localhost:3000/api/map/pins?bounds=2.7,36.6,3.5,36.9)",
+      "Bash(ls:*)"
     ]
   }
 }
