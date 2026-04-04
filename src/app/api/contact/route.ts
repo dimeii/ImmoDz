@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { redis } from "@/lib/redis";
-import { resend } from "@/lib/resend";
+import { getRedis } from "@/lib/redis";
+import { getResend } from "@/lib/resend";
 import { contactSchema } from "@/lib/validations/contact";
 import { RATE_LIMITS } from "@/lib/config";
 
@@ -16,6 +16,7 @@ export async function POST(request: NextRequest) {
     // Rate limit par IP
     const ip = request.headers.get("x-forwarded-for") ?? "unknown";
     const rateLimitKey = `contact:rate:${ip}`;
+    const redis = getRedis();
     const currentCount = (await redis.get<number>(rateLimitKey)) ?? 0;
 
     if (currentCount >= RATE_LIMITS.CONTACT_PER_HOUR) {
@@ -51,7 +52,7 @@ export async function POST(request: NextRequest) {
 
     // Envoyer email au propriétaire
     if (listing.user.email) {
-      await resend.emails.send({
+      await getResend().emails.send({
         from: "ImmoDz <noreply@immodz.com>",
         to: listing.user.email,
         subject: `Nouveau message pour "${listing.title}"`,
@@ -68,7 +69,7 @@ export async function POST(request: NextRequest) {
 
     // Accusé de réception
     if (session.user.email) {
-      await resend.emails.send({
+      await getResend().emails.send({
         from: "ImmoDz <noreply@immodz.com>",
         to: session.user.email,
         subject: `Votre message a été envoyé — "${listing.title}"`,

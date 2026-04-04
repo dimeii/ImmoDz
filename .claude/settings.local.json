@@ -33,7 +33,8 @@
       "Bash(curl -s \"http://localhost:3000/api/map/pins?bounds=2.7,36.6,3.5,36.9\")",
       "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(len\\(d[''''features'''']\\), ''''pins''''\\)\")",
       "Bash(curl -s http://localhost:3000/api/map/pins?bounds=2.7,36.6,3.5,36.9)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(find /c/DEV/ImmoDz -type f \\\\\\(-name *map* -o -name *Map* \\\\\\))"
     ]
   }
 }
