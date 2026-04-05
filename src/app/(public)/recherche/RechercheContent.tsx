@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import MapView, { PinProperties } from "@/components/map/MapView";
 import AnnonceList from "@/components/annonces/AnnonceList";
 import SearchFilters from "@/components/ui/SearchFilters";
+import PhotoCarousel from "@/components/annonces/PhotoCarousel";
 import Link from "next/link";
 
 type ViewMode = "map" | "list";
@@ -27,6 +28,40 @@ export default function RechercheContent() {
   const [view, setView] = useState<ViewMode>("map");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedListings, setSelectedListings] = useState<PinProperties[]>([]);
+
+  // Fetched full listing details (with photos)
+  interface ListingDetail {
+    id: string;
+    title: string;
+    price: number;
+    transactionType: string;
+    propertyType: string;
+    surface?: number | null;
+    rooms?: number | null;
+    commune?: string | null;
+    wilaya: { name: string };
+    photos: { url: string }[];
+  }
+  const [listingDetails, setListingDetails] = useState<Record<string, ListingDetail>>({});
+
+  // Fetch full details when pins are selected
+  useEffect(() => {
+    if (selectedListings.length === 0) return;
+    const idsToFetch = selectedListings
+      .map((l) => l.id)
+      .filter((id) => !listingDetails[id]);
+    if (idsToFetch.length === 0) return;
+
+    idsToFetch.forEach((id) => {
+      fetch(`/api/annonces/${id}`)
+        .then((r) => r.json())
+        .then((data) => {
+          if (data && !data.error) {
+            setListingDetails((prev) => ({ ...prev, [id]: data }));
+          }
+        });
+    });
+  }, [selectedListings]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleFiltersChange = useCallback(
     (newFilters: Record<string, string>) => {
@@ -216,55 +251,75 @@ export default function RechercheContent() {
 
               {/* Liste des annonces */}
               <div className="flex-1 overflow-y-auto">
-                {selectedListings.map((listing) => (
-                  <Link
-                    key={listing.id}
-                    href={`/annonces/${listing.id}`}
-                    className="block border-b border-gray-100 hover:bg-primary-50 transition-colors"
-                  >
-                    <div className="p-4">
-                      {/* Badge type */}
-                      <div className="flex items-center gap-2 mb-2">
-                        <span
-                          className={`text-xs font-bold px-2 py-0.5 rounded text-white ${
-                            listing.transactionType === "SALE"
-                              ? "bg-accent-red"
-                              : "bg-primary-950"
-                          }`}
-                        >
-                          {listing.transactionType === "RENT"
-                            ? "Location"
-                            : "Vente"}
-                        </span>
-                        <span className="text-xs text-gray-500 font-medium">
-                          {propertyTypeLabels[listing.propertyType] ??
-                            listing.propertyType}
-                        </span>
-                      </div>
+                {selectedListings.map((listing) => {
+                  const detail = listingDetails[listing.id];
+                  const photos = detail?.photos ?? (listing.thumbnail ? [{ url: listing.thumbnail }] : []);
 
-                      {/* Titre */}
-                      <h4 className="font-semibold text-gray-900 text-sm leading-snug mb-2">
-                        {listing.title}
-                      </h4>
+                  return (
+                    <div
+                      key={listing.id}
+                      className="border-b border-gray-100"
+                    >
+                      <div className="p-4">
+                        {/* Photo carousel */}
+                        <PhotoCarousel photos={photos} alt={listing.title} />
 
-                      {/* Prix */}
-                      <p className="text-lg font-bold text-primary-950">
-                        {listing.price.toLocaleString("fr-DZ")} DA
-                        {listing.transactionType === "RENT" && (
-                          <span className="text-xs font-normal text-gray-400">
-                            {" "}
-                            / mois
+                        {/* Badge type */}
+                        <div className="flex items-center gap-2 mt-3 mb-2">
+                          <span
+                            className={`text-xs font-bold px-2 py-0.5 rounded text-white ${
+                              listing.transactionType === "SALE"
+                                ? "bg-accent-red"
+                                : "bg-primary-950"
+                            }`}
+                          >
+                            {listing.transactionType === "RENT"
+                              ? "Location"
+                              : "Vente"}
                           </span>
-                        )}
-                      </p>
+                          <span className="text-xs text-gray-500 font-medium">
+                            {propertyTypeLabels[listing.propertyType] ??
+                              listing.propertyType}
+                          </span>
+                        </div>
 
-                      {/* Lien */}
-                      <span className="text-xs text-primary-950 font-semibold mt-2 inline-block">
-                        Voir le detail →
-                      </span>
+                        {/* Titre */}
+                        <h4 className="font-semibold text-gray-900 text-sm leading-snug mb-1">
+                          {listing.title}
+                        </h4>
+
+                        {/* Location */}
+                        {detail && (
+                          <p className="text-xs text-gray-500 mb-2">
+                            {detail.wilaya.name}
+                            {detail.commune && ` — ${detail.commune}`}
+                            {detail.surface && ` · ${detail.surface} m²`}
+                            {detail.rooms && ` · ${detail.rooms} pièces`}
+                          </p>
+                        )}
+
+                        {/* Prix */}
+                        <p className="text-lg font-bold text-primary-950">
+                          {listing.price.toLocaleString("fr-DZ")} DA
+                          {listing.transactionType === "RENT" && (
+                            <span className="text-xs font-normal text-gray-400">
+                              {" "}
+                              / mois
+                            </span>
+                          )}
+                        </p>
+
+                        {/* Lien */}
+                        <Link
+                          href={`/annonces/${listing.id}`}
+                          className="mt-2 inline-block text-xs font-semibold text-primary-950 hover:underline"
+                        >
+                          Voir le detail →
+                        </Link>
+                      </div>
                     </div>
-                  </Link>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
