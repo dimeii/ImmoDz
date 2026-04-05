@@ -1,10 +1,20 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Skip gate check for the gate page and its API
-  if (pathname === "/gate" || pathname === "/api/gate") {
+  // Skip gate page and its API
+  if (pathname === "/gate" || pathname.startsWith("/api/gate")) {
+    return NextResponse.next();
+  }
+
+  // Skip static assets and API auth
+  if (
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/api/auth") ||
+    pathname.includes(".")
+  ) {
     return NextResponse.next();
   }
 
@@ -16,9 +26,3 @@ export function middleware(request: NextRequest) {
 
   return NextResponse.next();
 }
-
-export const config = {
-  matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-  ],
-};
