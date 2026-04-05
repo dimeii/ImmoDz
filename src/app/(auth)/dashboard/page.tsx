@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import DashboardListings from "@/components/dashboard/DashboardListings";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -19,17 +20,27 @@ export default async function DashboardPage() {
     include: { agency: true },
   });
 
+  const initialLimit = 10;
   const listings = await db.listing.findMany({
     where: { userId: session.user.id },
     include: {
+      wilaya: true,
       photos: { take: 1, orderBy: { order: "asc" } },
     },
     orderBy: { createdAt: "desc" },
-    take: 5,
+    take: initialLimit + 1,
   });
+
+  const hasMore = listings.length > initialLimit;
+  const initialListings = hasMore ? listings.slice(0, initialLimit) : listings;
+  const initialCursor = hasMore ? initialListings[initialListings.length - 1].id : null;
 
   const listingStats = await db.listing.count({
     where: { userId: session.user.id, status: "ACTIVE" },
+  });
+
+  const totalListings = await db.listing.count({
+    where: { userId: session.user.id },
   });
 
   const isAgencyMember = membership?.role === "AGENCY_DIRECTOR" || membership?.role === "AGENCY_EMPLOYEE";
@@ -98,13 +109,13 @@ export default async function DashboardPage() {
           </Link>
         </div>
 
-        {/* Annonces récentes */}
+        {/* Annonces */}
         <div>
           <h2 className="text-2xl font-bold text-gray-900 mb-6">
-            Vos annonces récentes
+            Vos annonces
           </h2>
 
-          {listings.length === 0 ? (
+          {totalListings === 0 ? (
             <div className="rounded-2xl border border-gray-100 bg-white p-8 text-center">
               <p className="text-gray-500 mb-4">
                 Vous n'avez encore aucune annonce
@@ -120,51 +131,11 @@ export default async function DashboardPage() {
               </Link>
             </div>
           ) : (
-            <div className="space-y-4">
-              {listings.map((listing) => (
-                <Link
-                  key={listing.id}
-                  href={`/annonces/${listing.id}`}
-                  className="block rounded-2xl border border-gray-100 bg-white p-4 hover:shadow-md transition-shadow"
-                >
-                  <div className="flex gap-4">
-                    {listing.photos.length > 0 && (
-                      <div className="w-24 h-24 rounded-lg bg-gray-200 flex-shrink-0 overflow-hidden">
-                        <img
-                          src={listing.photos[0].url}
-                          alt={listing.title}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-gray-900 mb-1 line-clamp-2">
-                        {listing.title}
-                      </h3>
-                      <p className="text-sm text-gray-600 mb-2">
-                        {listing.address || "Adresse non spécifiée"}
-                      </p>
-                      <div className="flex items-center gap-2">
-                        <span className={`text-sm font-bold ${
-                          listing.transactionType === "RENT"
-                            ? "text-primary-950"
-                            : "text-accent-red"
-                        }`}>
-                          {listing.price.toLocaleString("fr-DZ")} DA
-                        </span>
-                        <span className={`text-xs px-2 py-1 rounded font-bold ${
-                          listing.status === "ACTIVE"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}>
-                          {listing.status === "ACTIVE" ? "Active" : "Inactive"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
+            <DashboardListings
+              initialListings={JSON.parse(JSON.stringify(initialListings))}
+              initialTotal={totalListings}
+              initialCursor={initialCursor}
+            />
           )}
         </div>
       </div>
