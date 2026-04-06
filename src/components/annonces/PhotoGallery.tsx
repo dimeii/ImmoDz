@@ -29,7 +29,6 @@ export default function PhotoGallery({ photos }: PhotoGalleryProps) {
     );
   }, [photos.length]);
 
-  // Keyboard navigation
   useEffect(() => {
     if (!isOpen) return;
     function onKey(e: KeyboardEvent) {
@@ -47,29 +46,72 @@ export default function PhotoGallery({ photos }: PhotoGalleryProps) {
 
   if (photos.length === 0) {
     return (
-      <div className="flex h-64 items-center justify-center rounded-lg bg-gray-100">
-        <p className="text-gray-400">Aucune photo</p>
+      <div className="flex h-64 items-center justify-center rounded-xl bg-surface-container-low">
+        <span className="material-symbols-outlined text-4xl text-outline-variant">
+          image
+        </span>
       </div>
     );
   }
 
+  const mainPhoto = photos[0];
+  const sidePhotos = photos.slice(1, 3);
+  const remainingCount = photos.length - 3;
+
   return (
     <>
-      {/* Grid */}
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
-        {photos.map((photo, i) => (
-          <div
-            key={photo.id}
-            className="aspect-[4/3] cursor-pointer overflow-hidden rounded-lg"
-            onClick={() => setLightboxIndex(i)}
-          >
-            <img
-              src={photo.url}
-              alt={photo.category}
-              className="h-full w-full object-cover transition-transform duration-200 hover:scale-105"
-            />
+      {/* Editorial Grid */}
+      <div className="grid grid-cols-12 gap-4 h-[500px]">
+        {/* Main large photo */}
+        <div
+          className="col-span-12 md:col-span-8 h-full rounded-xl overflow-hidden relative group cursor-pointer"
+          onClick={() => setLightboxIndex(0)}
+        >
+          <img
+            src={mainPhoto.url}
+            alt={mainPhoto.category}
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
+        </div>
+
+        {/* Side photos */}
+        {sidePhotos.length > 0 && (
+          <div className="hidden md:flex col-span-4 flex-col gap-4 h-full">
+            {sidePhotos.map((photo, i) => (
+              <div
+                key={photo.id}
+                className="flex-1 rounded-xl overflow-hidden relative cursor-pointer"
+                onClick={() => setLightboxIndex(i + 1)}
+              >
+                <img
+                  src={photo.url}
+                  alt={photo.category}
+                  className="w-full h-full object-cover"
+                />
+                {/* "+N Photos" overlay on last side photo */}
+                {i === sidePhotos.length - 1 && remainingCount > 0 && (
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center hover:bg-black/30 transition-colors">
+                    <span className="text-white font-headline font-bold text-lg">
+                      +{remainingCount} Photos
+                    </span>
+                  </div>
+                )}
+              </div>
+            ))}
+            {/* If only 1 side photo, fill the remaining space */}
+            {sidePhotos.length === 1 && (
+              <div
+                className="flex-1 rounded-xl overflow-hidden bg-surface-container-low flex items-center justify-center cursor-pointer"
+                onClick={() => setLightboxIndex(0)}
+              >
+                <span className="material-symbols-outlined text-3xl text-outline-variant">
+                  photo_library
+                </span>
+              </div>
+            )}
           </div>
-        ))}
+        )}
       </div>
 
       {/* Lightbox */}
@@ -78,22 +120,17 @@ export default function PhotoGallery({ photos }: PhotoGalleryProps) {
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
           onClick={close}
         >
-          {/* Close button */}
           <button
             className="absolute top-4 right-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
             onClick={close}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <span className="material-symbols-outlined">close</span>
           </button>
 
-          {/* Counter */}
           <div className="absolute top-4 left-4 rounded-full bg-white/10 px-3 py-1 text-sm text-white backdrop-blur-sm">
             {lightboxIndex! + 1} / {photos.length}
           </div>
 
-          {/* Prev button */}
           {photos.length > 1 && (
             <button
               className="absolute left-4 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
@@ -102,13 +139,12 @@ export default function PhotoGallery({ photos }: PhotoGalleryProps) {
                 goPrev();
               }}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-              </svg>
+              <span className="material-symbols-outlined">
+                chevron_left
+              </span>
             </button>
           )}
 
-          {/* Image */}
           <img
             key={lightboxIndex}
             src={photos[lightboxIndex!].url}
@@ -117,7 +153,6 @@ export default function PhotoGallery({ photos }: PhotoGalleryProps) {
             onClick={(e) => e.stopPropagation()}
           />
 
-          {/* Next button */}
           {photos.length > 1 && (
             <button
               className="absolute right-4 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
@@ -126,9 +161,9 @@ export default function PhotoGallery({ photos }: PhotoGalleryProps) {
                 goNext();
               }}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
+              <span className="material-symbols-outlined">
+                chevron_right
+              </span>
             </button>
           )}
         </div>

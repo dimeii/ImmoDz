@@ -26,10 +26,8 @@ export default function RechercheContent() {
     transactionType: "RENT",
   });
   const [view, setView] = useState<ViewMode>("map");
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedListings, setSelectedListings] = useState<PinProperties[]>([]);
 
-  // Fetched full listing details (with photos)
   interface ListingDetail {
     id: string;
     title: string;
@@ -38,13 +36,17 @@ export default function RechercheContent() {
     propertyType: string;
     surface?: number | null;
     rooms?: number | null;
+    bedrooms?: number | null;
+    bathrooms?: number | null;
     commune?: string | null;
+    description?: string | null;
     wilaya: { name: string };
     photos: { url: string }[];
   }
-  const [listingDetails, setListingDetails] = useState<Record<string, ListingDetail>>({});
+  const [listingDetails, setListingDetails] = useState<
+    Record<string, ListingDetail>
+  >({});
 
-  // Fetch full details when pins are selected
   useEffect(() => {
     if (selectedListings.length === 0) return;
     const idsToFetch = selectedListings
@@ -79,252 +81,206 @@ export default function RechercheContent() {
   }, []);
 
   return (
-    <main className="flex h-[calc(100vh-57px)]">
-      {/* Sidebar filtres (gauche) */}
-      <aside
-        style={{
-          width: sidebarOpen ? 320 : 0,
-          minWidth: sidebarOpen ? 320 : 0,
-          padding: sidebarOpen ? 24 : 0,
-          borderRightWidth: sidebarOpen ? 4 : 0,
-          transition: "all 300ms ease-in-out",
-          overflow: "hidden",
-        }}
-        className="bg-white border-primary-950 overflow-y-auto shadow-lg"
-      >
-        <div style={{ width: 272, minWidth: 272 }}>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-bold text-primary-950">Filtres</h2>
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className="p-1 hover:bg-primary-50 rounded transition-colors"
-              aria-label="Fermer les filtres"
-            >
-              <svg
-                className="h-5 w-5 text-primary-950"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
+    <main className="-mt-20 pt-20 flex h-screen overflow-hidden bg-background">
+      {/* ============ SIDEBAR FILTERS ============ */}
+      <aside className="w-[340px] bg-surface-container-lowest flex-shrink-0 flex flex-col z-40 border-r border-outline-variant/10">
+        <div className="p-6 overflow-y-auto scrollbar-hide flex-1">
           <SearchFilters onFiltersChange={handleFiltersChange} />
         </div>
       </aside>
 
-      {/* Zone principale */}
-      <div className="flex flex-1 flex-col min-w-0">
-        {/* Barre d'outils */}
-        <div className="flex items-center justify-between border-b bg-white px-4 py-3">
-          {/* Bouton entonnoir */}
+      {/* ============ MAIN CONTENT AREA ============ */}
+      <section className="flex-1 relative overflow-hidden">
+        {/* Map or List */}
+        {view === "map" ? (
+          <MapView filters={filters} onPinClick={handlePinClick} />
+        ) : (
+          <div className="h-full overflow-y-auto p-6 bg-surface-container-low">
+            <AnnonceList filters={filters} />
+          </div>
+        )}
+
+        {/* Floating View Toggle */}
+        <div className="absolute top-6 left-1/2 -translate-x-1/2 z-30 bg-surface-container-lowest/80 backdrop-blur-md rounded-full p-1 shadow-2xl flex items-center gap-1">
           <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className={`rounded-lg px-3 py-2 transition-colors flex items-center gap-2 text-sm font-semibold ${
-              sidebarOpen
-                ? "bg-primary-950 text-white"
-                : "text-primary-950 hover:bg-primary-50"
+            onClick={() => setView("map")}
+            className={`flex items-center gap-2 px-6 py-2 rounded-full text-xs font-bold transition-all ${
+              view === "map"
+                ? "bg-primary text-on-primary"
+                : "text-on-surface-variant hover:bg-surface-container-high"
             }`}
           >
-            <svg
-              className="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z"
-              />
-            </svg>
-            Filtres
+            <span className="material-symbols-outlined text-sm">map</span>
+            Carte
           </button>
-
-          {/* Toggle carte / liste */}
-          <div className="flex rounded-lg bg-primary-50 p-1">
-            <button
-              onClick={() => setView("map")}
-              className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                view === "map"
-                  ? "bg-white text-primary-950 shadow-md"
-                  : "text-gray-500 hover:text-primary-950"
-              }`}
-            >
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M9 6.75V15m6-6v8.25m.503-14.032a22.373 22.373 0 00-6.006 0C8.09 3.394 7 4.587 7 5.942v12.116c0 1.355 1.09 2.548 2.497 2.724a22.373 22.373 0 006.006 0C16.91 20.606 18 19.413 18 18.058V5.942c0-1.355-1.09-2.548-2.497-2.724z"
-                />
-              </svg>
-              Carte
-            </button>
-            <button
-              onClick={() => setView("list")}
-              className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                view === "list"
-                  ? "bg-white text-primary-950 shadow-md"
-                  : "text-gray-500 hover:text-primary-950"
-              }`}
-            >
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
-                />
-              </svg>
-              Liste
-            </button>
-          </div>
+          <button
+            onClick={() => setView("list")}
+            className={`flex items-center gap-2 px-6 py-2 rounded-full text-xs font-bold transition-all ${
+              view === "list"
+                ? "bg-primary text-on-primary"
+                : "text-on-surface-variant hover:bg-surface-container-high"
+            }`}
+          >
+            <span className="material-symbols-outlined text-sm">
+              format_list_bulleted
+            </span>
+            Liste
+          </button>
         </div>
 
-        {/* Contenu : carte ou liste */}
-        <div className="flex-1 overflow-hidden relative">
-          {view === "map" ? (
-            <MapView filters={filters} onPinClick={handlePinClick} />
-          ) : (
-            <div className="h-full overflow-y-auto p-4">
-              <AnnonceList filters={filters} />
+        {/* ============ PROPERTY DETAIL PANEL ============ */}
+        {selectedListings.length > 0 && (
+          <div className="absolute right-6 top-6 bottom-6 w-[380px] bg-surface-container-lowest rounded-2xl shadow-2xl z-40 flex flex-col overflow-hidden border border-outline-variant/10 animate-[fadeIn_0.2s_ease-out]">
+            {/* Panel header with close */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-surface-container flex-shrink-0">
+              <h3 className="text-sm font-bold font-headline text-on-surface">
+                {selectedListings.length === 1
+                  ? "Annonce"
+                  : `${selectedListings.length} annonces`}
+              </h3>
+              <button
+                onClick={closePanel}
+                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-container-high transition-all text-on-surface-variant hover:text-on-surface"
+              >
+                <span className="material-symbols-outlined text-xl">close</span>
+              </button>
             </div>
-          )}
 
-          {/* Panneau latéral droit — détails annonce(s) */}
-          <div
-            style={{
-              width: selectedListings.length > 0 ? 380 : 0,
-              transition: "width 300ms ease-in-out",
-              overflow: "hidden",
-            }}
-            className="absolute top-0 right-0 h-full bg-white shadow-2xl border-l border-gray-200 z-20"
-          >
-            <div
-              style={{ width: 380, minWidth: 380 }}
-              className="h-full flex flex-col"
-            >
-              {/* Header du panneau */}
-              <div className="flex items-center justify-between p-4 border-b border-gray-200">
-                <h3 className="text-base font-bold text-primary-950">
-                  {selectedListings.length === 1
-                    ? "Annonce"
-                    : `${selectedListings.length} annonces`}
-                </h3>
-                <button
-                  onClick={closePanel}
-                  className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
-                >
-                  <svg
-                    className="h-5 w-5 text-gray-500"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
+            {/* Scrollable content */}
+            <div className="flex-1 overflow-y-auto scrollbar-hide">
+              {selectedListings.map((listing) => {
+                const detail = listingDetails[listing.id];
+                const photos =
+                  detail?.photos ??
+                  (listing.thumbnail ? [{ url: listing.thumbnail }] : []);
+
+                return (
+                  <div
+                    key={listing.id}
+                    className="border-b border-surface-container last:border-b-0"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              </div>
-
-              {/* Liste des annonces */}
-              <div className="flex-1 overflow-y-auto">
-                {selectedListings.map((listing) => {
-                  const detail = listingDetails[listing.id];
-                  const photos = detail?.photos ?? (listing.thumbnail ? [{ url: listing.thumbnail }] : []);
-
-                  return (
-                    <div
-                      key={listing.id}
-                      className="border-b border-gray-100"
-                    >
-                      <div className="p-4">
-                        {/* Photo carousel */}
+                    {/* Photo */}
+                    <div className="relative h-64 overflow-hidden">
+                      {photos.length > 0 ? (
                         <PhotoCarousel photos={photos} alt={listing.title} />
+                      ) : (
+                        <div className="w-full h-full bg-surface-container-low flex items-center justify-center">
+                          <span className="material-symbols-outlined text-4xl text-outline-variant">
+                            image
+                          </span>
+                        </div>
+                      )}
+                    </div>
 
-                        {/* Badge type */}
-                        <div className="flex items-center gap-2 mt-3 mb-2">
-                          <span
-                            className={`text-xs font-bold px-2 py-0.5 rounded text-white ${
+                    {/* Content */}
+                    <div className="p-6 space-y-4">
+                      <div className="flex justify-between items-start">
+                        <div className="space-y-1 flex-1 min-w-0">
+                          <div
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider inline-block ${
                               listing.transactionType === "SALE"
-                                ? "bg-accent-red"
-                                : "bg-primary-950"
+                                ? "bg-accent-red/10 text-accent-red"
+                                : "bg-primary/10 text-primary"
                             }`}
                           >
                             {listing.transactionType === "RENT"
                               ? "Location"
                               : "Vente"}
-                          </span>
-                          <span className="text-xs text-gray-500 font-medium">
-                            {propertyTypeLabels[listing.propertyType] ??
-                              listing.propertyType}
-                          </span>
+                          </div>
+                          <h3 className="text-xl font-bold font-headline text-on-surface tracking-tight leading-tight">
+                            {listing.title}
+                          </h3>
                         </div>
-
-                        {/* Titre */}
-                        <h4 className="font-semibold text-gray-900 text-sm leading-snug mb-1">
-                          {listing.title}
-                        </h4>
-
-                        {/* Location */}
-                        {detail && (
-                          <p className="text-xs text-gray-500 mb-2">
-                            {detail.wilaya.name}
-                            {detail.commune && ` — ${detail.commune}`}
-                            {detail.surface && ` · ${detail.surface} m²`}
-                            {detail.rooms && ` · ${detail.rooms} pièces`}
+                        <div className="text-right flex-shrink-0 ml-4">
+                          <p className="text-2xl font-bold text-primary font-headline">
+                            {listing.price >= 1_000_000
+                              ? `${(listing.price / 1_000_000).toFixed(1)}M`
+                              : listing.price.toLocaleString("fr-DZ")}
                           </p>
-                        )}
+                          <p className="text-[10px] text-on-surface-variant uppercase font-bold tracking-widest">
+                            DA
+                            {listing.transactionType === "RENT" ? " / mois" : ""}
+                          </p>
+                        </div>
+                      </div>
 
-                        {/* Prix */}
-                        <p className="text-lg font-bold text-primary-950">
-                          {listing.price.toLocaleString("fr-DZ")} DA
-                          {listing.transactionType === "RENT" && (
-                            <span className="text-xs font-normal text-gray-400">
-                              {" "}
-                              / mois
-                            </span>
+                      {/* Stats row */}
+                      {detail && (
+                        <div className="flex items-center gap-4 text-on-surface-variant text-sm py-4 border-y border-surface-container">
+                          {detail.bedrooms != null && (
+                            <div className="flex items-center gap-1.5">
+                              <span className="material-symbols-outlined text-primary text-lg">
+                                bed
+                              </span>
+                              <span className="font-bold">
+                                {detail.bedrooms}
+                              </span>
+                            </div>
                           )}
-                        </p>
+                          {detail.bathrooms != null && (
+                            <div className="flex items-center gap-1.5 border-l border-surface-container pl-4">
+                              <span className="material-symbols-outlined text-primary text-lg">
+                                bathtub
+                              </span>
+                              <span className="font-bold">
+                                {detail.bathrooms}
+                              </span>
+                            </div>
+                          )}
+                          {detail.surface != null && (
+                            <div className="flex items-center gap-1.5 border-l border-surface-container pl-4">
+                              <span className="material-symbols-outlined text-primary text-lg">
+                                square_foot
+                              </span>
+                              <span className="font-bold">
+                                {detail.surface}m²
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      )}
 
-                        {/* Lien */}
+                      {/* Location */}
+                      {detail && (
+                        <p className="text-sm text-on-surface-variant">
+                          {detail.wilaya.name}
+                          {detail.commune && ` — ${detail.commune}`}
+                        </p>
+                      )}
+
+                      {/* Description */}
+                      {detail?.description && (
+                        <p className="text-sm text-on-surface-variant leading-relaxed line-clamp-3">
+                          {detail.description}
+                        </p>
+                      )}
+
+                      {/* Action buttons */}
+                      <div className="grid grid-cols-2 gap-3 pt-2">
                         <Link
                           href={`/annonces/${listing.id}`}
-                          className="mt-2 inline-block text-xs font-semibold text-primary-950 hover:underline"
+                          className="py-3 px-4 border border-outline text-primary font-bold rounded-xl text-xs hover:bg-surface-container-low transition-all text-center"
                         >
-                          Voir le detail →
+                          Voir le détail
+                        </Link>
+                        <Link
+                          href={`/annonces/${listing.id}#contact`}
+                          className="py-3 px-4 bg-primary text-on-primary font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
+                        >
+                          <span className="material-symbols-outlined text-sm">
+                            mail
+                          </span>
+                          Contacter
                         </Link>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
-        </div>
-      </div>
+        )}
+      </section>
     </main>
   );
 }

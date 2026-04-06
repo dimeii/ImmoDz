@@ -7,52 +7,82 @@ export default function Navbar() {
   const { data: session } = useSession();
 
   return (
-    <nav className="border-b-4 border-primary-950 bg-white shadow-lg">
-      <div className="container mx-auto flex items-center justify-between px-4 py-3">
-        <Link href="/" className="text-3xl font-black text-primary-950 hover:text-primary-900 transition-all">
-          🏠 ImmoDz
+    <header className="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-md shadow-sm">
+      <nav className="flex justify-between items-center px-8 py-4 max-w-7xl mx-auto">
+        <Link
+          href="/"
+          className="text-xl font-bold text-emerald-900 tracking-tighter font-headline"
+        >
+          ImmoDz
         </Link>
+
+        <div className="hidden md:flex items-center space-x-8 font-headline font-semibold text-sm tracking-tight">
+          <Link
+            href="/recherche"
+            className="text-emerald-900 border-b-2 border-emerald-900 pb-1"
+          >
+            Annonces
+          </Link>
+          <Link
+            href="/recherche?transactionType=RENT"
+            className="text-emerald-800/60 hover:text-emerald-900 transition-colors duration-300"
+          >
+            Location
+          </Link>
+          <Link
+            href="/recherche?transactionType=SALE"
+            className="text-emerald-800/60 hover:text-emerald-900 transition-colors duration-300"
+          >
+            Achat
+          </Link>
+          <Link
+            href="#"
+            className="text-emerald-800/60 hover:text-emerald-900 transition-colors duration-300"
+          >
+            Services
+          </Link>
+        </div>
 
         <div className="flex items-center gap-4">
           {session ? (
             <>
               <Link
-                href="/annonces/nouvelle"
-                className="rounded-md bg-primary-950 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-900 shadow-md transition-all hover:shadow-lg"
+                href="/dashboard"
+                className="text-sm font-medium text-emerald-800/60 hover:text-emerald-900 transition-colors"
               >
-                ➕ Déposer une annonce
+                Mon compte
               </Link>
               <Link
-                href="/dashboard"
-                className="text-sm font-medium text-primary-950 hover:text-primary-900 transition-colors"
+                href="/annonces/nouvelle"
+                className="bg-primary text-on-primary px-6 py-2 rounded-md font-headline text-sm font-semibold hover:opacity-90 transition-all"
               >
-                👤 Mon compte
+                Deposer une annonce
               </Link>
               <button
                 onClick={() => signOut()}
-                className="text-sm font-medium text-primary-950 hover:text-primary-900 transition-colors"
+                className="text-sm font-medium text-emerald-800/60 hover:text-emerald-900 transition-colors"
               >
-                🚪 Déconnexion
+                Deconnexion
               </button>
             </>
           ) : (
             <>
               <Link
                 href="/login"
-                className="text-sm font-medium text-primary-950 hover:text-primary-900 transition-colors"
+                className="text-sm font-medium text-emerald-800/60 hover:text-emerald-900 transition-colors"
               >
-                🔐 Connexion
+                Connexion
               </Link>
               <Link
                 href="/register"
-                className="rounded-md bg-primary-950 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-900 shadow-md transition-all hover:shadow-lg"
+                className="bg-primary text-on-primary px-6 py-2 rounded-md font-headline text-sm font-semibold hover:opacity-90 transition-all"
               >
-                ✍️ Inscription
+                Inscription
               </Link>
             </>
           )}
         </div>
-      </div>
-    </nav>
+      </nav>
+    </header>
   );
 }

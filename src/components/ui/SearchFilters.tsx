@@ -23,14 +23,7 @@ const PROPERTY_TYPES = [
   { value: "GARAGE", label: "Garage" },
 ];
 
-const ROOMS_OPTIONS = [
-  { value: "", label: "Pièces" },
-  { value: "1", label: "1+" },
-  { value: "2", label: "2+" },
-  { value: "3", label: "3+" },
-  { value: "4", label: "4+" },
-  { value: "5", label: "5+" },
-];
+const ROOMS_OPTIONS = ["1", "2", "3", "4", "5"];
 
 export interface SearchFiltersValues {
   transactionType: string;
@@ -96,40 +89,45 @@ export default function SearchFilters({ onFiltersChange }: SearchFiltersProps) {
   }
 
   return (
-    <div className="space-y-4">
-      {/* Type de transaction */}
-      <div className="flex gap-2">
-        <button
-          onClick={() => setTransactionType("RENT")}
-          className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-            transactionType === "RENT"
-              ? "bg-primary-600 text-white"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-          }`}
-        >
-          Location
-        </button>
-        <button
-          onClick={() => setTransactionType("SALE")}
-          className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-            transactionType === "SALE"
-              ? "bg-primary-600 text-white"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-          }`}
-        >
-          Vente
-        </button>
+    <div className="space-y-8">
+      {/* Transaction Type */}
+      <div>
+        <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-4">
+          Type de Transaction
+        </h2>
+        <div className="flex p-1 bg-surface-container-low rounded-xl">
+          <button
+            onClick={() => setTransactionType("SALE")}
+            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
+              transactionType === "SALE"
+                ? "bg-primary text-on-primary shadow-sm"
+                : "text-on-surface-variant hover:bg-surface-container-high"
+            }`}
+          >
+            Vente
+          </button>
+          <button
+            onClick={() => setTransactionType("RENT")}
+            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
+              transactionType === "RENT"
+                ? "bg-primary text-on-primary shadow-sm"
+                : "text-on-surface-variant hover:bg-surface-container-high"
+            }`}
+          >
+            Location
+          </button>
+        </div>
       </div>
 
-      {/* Type de bien */}
+      {/* Property Type */}
       <div>
-        <label className="mb-1 block text-xs font-medium text-gray-500">
-          Type de bien
-        </label>
+        <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-4">
+          Type de Bien
+        </h2>
         <select
           value={propertyType}
           onChange={(e) => setPropertyType(e.target.value)}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className="select-styled w-full bg-surface-container-low border-none rounded-xl py-3 pl-4 pr-10 text-sm focus:ring-2 focus:ring-primary/20"
         >
           {PROPERTY_TYPES.map((t) => (
             <option key={t.value} value={t.value}>
@@ -141,13 +139,13 @@ export default function SearchFilters({ onFiltersChange }: SearchFiltersProps) {
 
       {/* Wilaya */}
       <div>
-        <label className="mb-1 block text-xs font-medium text-gray-500">
+        <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-4">
           Wilaya
-        </label>
+        </h2>
         <select
           value={wilayaCode}
           onChange={(e) => setWilayaCode(e.target.value)}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className="select-styled w-full bg-surface-container-low border-none rounded-xl py-3 pl-4 pr-10 text-sm focus:ring-2 focus:ring-primary/20"
         >
           <option value="">Toutes les wilayas</option>
           {wilayas?.map((w) => (
@@ -158,77 +156,84 @@ export default function SearchFilters({ onFiltersChange }: SearchFiltersProps) {
         </select>
       </div>
 
-      {/* Prix */}
+      {/* Budget */}
       <div>
-        <label className="mb-1 block text-xs font-medium text-gray-500">
+        <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-4">
           Budget (DA{transactionType === "RENT" ? "/mois" : ""})
-        </label>
-        <div className="flex gap-2">
+        </h2>
+        <div className="grid grid-cols-2 gap-3">
           <input
             type="number"
             placeholder="Min"
             value={priceMin}
             onChange={(e) => setPriceMin(e.target.value)}
-            className="w-1/2 rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className="w-full bg-surface-container-low border-none rounded-xl py-2.5 px-4 text-sm focus:ring-2 focus:ring-primary/20 placeholder:text-on-surface-variant/40"
           />
           <input
             type="number"
             placeholder="Max"
             value={priceMax}
             onChange={(e) => setPriceMax(e.target.value)}
-            className="w-1/2 rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className="w-full bg-surface-container-low border-none rounded-xl py-2.5 px-4 text-sm focus:ring-2 focus:ring-primary/20 placeholder:text-on-surface-variant/40"
           />
         </div>
       </div>
 
       {/* Surface */}
       <div>
-        <label className="mb-1 block text-xs font-medium text-gray-500">
+        <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-4">
           Surface (m²)
-        </label>
-        <div className="flex gap-2">
+        </h2>
+        <div className="grid grid-cols-2 gap-3">
           <input
             type="number"
             placeholder="Min"
             value={surfaceMin}
             onChange={(e) => setSurfaceMin(e.target.value)}
-            className="w-1/2 rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className="w-full bg-surface-container-low border-none rounded-xl py-2.5 px-4 text-sm focus:ring-2 focus:ring-primary/20 placeholder:text-on-surface-variant/40"
           />
           <input
             type="number"
             placeholder="Max"
             value={surfaceMax}
             onChange={(e) => setSurfaceMax(e.target.value)}
-            className="w-1/2 rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className="w-full bg-surface-container-low border-none rounded-xl py-2.5 px-4 text-sm focus:ring-2 focus:ring-primary/20 placeholder:text-on-surface-variant/40"
           />
         </div>
       </div>
 
-      {/* Pièces */}
+      {/* Rooms */}
       <div>
-        <label className="mb-1 block text-xs font-medium text-gray-500">
-          Nombre de pièces
-        </label>
-        <select
-          value={rooms}
-          onChange={(e) => setRooms(e.target.value)}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-        >
+        <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-4">
+          Pièces
+        </h2>
+        <div className="flex gap-2">
           {ROOMS_OPTIONS.map((r) => (
-            <option key={r.value} value={r.value}>
-              {r.label}
-            </option>
+            <button
+              key={r}
+              onClick={() => setRooms(rooms === r ? "" : r)}
+              className={`w-10 h-10 rounded-lg flex items-center justify-center text-xs font-bold transition-all ${
+                rooms === r
+                  ? "bg-primary text-on-primary shadow-lg shadow-primary/20"
+                  : "bg-surface-container-low hover:bg-primary/5 border border-transparent"
+              }`}
+            >
+              {r}+
+            </button>
           ))}
-        </select>
+        </div>
       </div>
 
-      {/* Réinitialiser */}
-      <button
-        onClick={handleReset}
-        className="w-full rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50"
-      >
-        Réinitialiser les filtres
-      </button>
+      {/* Actions */}
+      <div className="pt-4 pb-8 space-y-3">
+        <button
+          onClick={handleReset}
+          className="w-full py-3 text-on-surface-variant text-xs font-bold tracking-widest uppercase hover:text-primary transition-colors flex items-center justify-center gap-2"
+        >
+          <span className="material-symbols-outlined text-sm">restart_alt</span>
+          Réinitialiser
+        </button>
+      </div>
     </div>
   );
 }

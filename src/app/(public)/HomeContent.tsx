@@ -4,117 +4,88 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-
-const WILAYAS_POPULAIRES = [
+const WILAYAS = [
   { code: "16", name: "Alger" },
   { code: "31", name: "Oran" },
   { code: "25", name: "Constantine" },
+  { code: "23", name: "Annaba" },
   { code: "09", name: "Blida" },
   { code: "15", name: "Tizi Ouzou" },
-  { code: "06", name: "Béjaïa" },
-  { code: "19", name: "Sétif" },
-  { code: "23", name: "Annaba" },
+  { code: "06", name: "Bejaïa" },
+  { code: "19", name: "Setif" },
 ];
 
-const STATS = [
-  { value: "10 000+", label: "Annonces actives" },
-  { value: "58", label: "Wilayas couvertes" },
-  { value: "5 000+", label: "Utilisateurs satisfaits" },
-  { value: "200+", label: "Agences partenaires" },
-];
-
-const TRUST_POINTS = [
+const CATEGORIES = [
   {
-    icon: (
-      <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-      </svg>
-    ),
-    title: "Annonces vérifiées",
-    desc: "Chaque annonce est contrôlée par notre équipe pour garantir authenticité et transparence.",
-  },
-  {
-    icon: (
-      <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
-      </svg>
-    ),
-    title: "Relations humaines",
-    desc: "Particuliers et agences échangent directement. Pas d'intermédiaire, pas de commission cachée.",
-  },
-  {
-    icon: (
-      <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" />
-      </svg>
-    ),
-    title: "BTP & Programmes neufs",
-    desc: "Accédez aux projets de construction neufs et suivez l'évolution du bâtiment en Algérie.",
-  },
-  {
-    icon: (
-      <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-      </svg>
-    ),
-    title: "Recherche géolocalisée",
-    desc: "Explorez la carte interactive pour trouver des biens près de chez vous, dans toutes les wilayas.",
-  },
-];
-
-const PROPERTY_TYPES = [
-  {
-    icon: (
-      <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" strokeWidth={1.2} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" />
-      </svg>
-    ),
     label: "Appartements",
     type: "APARTMENT",
+    image:
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuACEBGRo65XL4HtEazsT9TX00TtS3OZyeUt4T9mlUA5HUBo7sYHPyKRwYqPo3pPni05KWFafiMZfEMBSnbNe36jLDRBxUzRvNmBshF2UnGw1ru-mJTwnv0ODqSKAOUvdk0Yle_YcQu6bUlCoQf0IVJI-ikJ9LRjRU8ek4XQ5bF4CNI44t2ljCFoMObNSXRTU6PFnLL-wSVJR-PEb5EXgQPVw1p1PXo1oz5-e5MhQXmVoIJ6kgL4QU7m2vPwmWQOkutxB25-PhNvBiS5",
+    offset: false,
   },
   {
-    icon: (
-      <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" strokeWidth={1.2} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 21v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21m0 0h4.5V3.545M12.75 21h7.5V10.75M2.25 21h1.5m18 0h-18M2.25 9l4.5-1.636M18.75 3l-1.5.545m0 6.205l3 1m1.5.5l-1.5-.5M6.75 7.364V3h-3v18m3-13.636l10.5-3.819" />
-      </svg>
-    ),
-    label: "Maisons",
-    type: "HOUSE",
-  },
-  {
-    icon: (
-      <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" strokeWidth={1.2} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" />
-      </svg>
-    ),
     label: "Villas",
     type: "VILLA",
+    image:
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuAf_DskJ4kz5FPLW7wAmxFdZJktsQRpodef92775b6niVSo_ojkRnQPYsYaxdmCoZIlpzq6scO2LyXyJmNf16k2EERLmPgZImWMXKv3g7wN4qznXahn2vjgYD2VCtxXO1XqdVFecZli411p4LW6VL11XrQ1_rOMnM2rIR382zOL-vdXTJB58k53ltSO4zyZoa-lj5hj9ZOCNh8VbYx9_4h8fCQAVC89dQO64d1RT7EyD_Au5HtHEVIR1ZhuhkOwPNzHrnYaHX797KBF",
+    offset: true,
   },
   {
-    icon: (
-      <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" strokeWidth={1.2} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016A3.001 3.001 0 0021 9.349m-18 0V7.5A.75.75 0 013.75 6.75h16.5a.75.75 0 01.75.75v1.849M3 9.349h18M12 12.75h.008v.008H12v-.008z" />
-      </svg>
-    ),
-    label: "Commerces",
-    type: "COMMERCIAL",
+    label: "Studios",
+    type: "STUDIO",
+    image:
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuBR2TSPxupNTAtWzfZzpjwQ3puJYR5HCnMtQHGOX-9Qlx8qF9lv2z4g98_r_0fqBLg7wzhGjyppikYyDiJE8m7z-agJkghy2yyhDFpUKGIdfOASJTe4LBKCULmm6c51wCrh2xCpSqf0EbbfMDfVYNPonC_AE7YVshxFXY--WvEhihnVBDdqdGmDGsvOKUbIjWZ5v2hv34EJTJP8irbrVspt3YypZ7UIikceIy4CaYB8V37Gimib7dOQgwRgRXnO530EjnKwbve7fe26",
+    offset: false,
   },
   {
-    icon: (
-      <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" strokeWidth={1.2} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503-14.032a22.373 22.373 0 00-6.006 0C8.09 3.394 7 4.587 7 5.942v12.116c0 1.355 1.09 2.548 2.497 2.724a22.373 22.373 0 006.006 0C16.91 20.606 18 19.413 18 18.058V5.942c0-1.355-1.09-2.548-2.497-2.724z" />
-      </svg>
-    ),
     label: "Terrains",
     type: "LAND",
+    image:
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuBxvfgDd3T3Bsmz4je1yItMos-nWONuz3-MQjCGOCCM8EqJYj7F8tL8mSULggbd8JRcWTmDrb3-Cpocpo1sDlE5lBKfc_-1JnlFA-4QMwLjIE0GUX10Wf-m95x_ekO4LmIRWnGaTeKoSICrIXVeXJetq0dsnI4DEUgYitwbWd3-HR-EEkJLjPLsjluevNAR_3kriTDEiRF27OgXOuDXXMnHogycw4RwfuufhoH-wQ9hQrWv0jkiqLIBm8WXZGAEnhapP3edn1A8XrCJ",
+    offset: true,
+  },
+];
+
+const FEATURED_LISTINGS = [
+  {
+    title: "Villa El Mouradia",
+    price: "120,000,000 DA",
+    location: "Alger, El Mouradia",
+    beds: 5,
+    baths: 3,
+    area: 450,
+    badge: "Nouveau",
+    image:
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuBcGnFUOWvJhnZhkVref6fi0b467Nw7_knnue0ftq5yhPHW4YKklvxM4_yWgym7YBAFeDVbyU-oWjm5g01fV99bS1ktuJ8He6XJ55X-6bNUH-qSl0WVw8TJNrk8RCv9h0DU4ZUnFp5o3nBpPotn95Q81aAaWQCP4nSawbp0xNg85OLMqkQH_4gHbOR0tIfcXqTuyCdNq3qdgBMk-nhqvM2VnV2fsj0nqH7apRPstGSh6CGuwK1eAS43k9vnGiltfBfkrwZHluoF1iOI",
+  },
+  {
+    title: "Penthouse Akid Lotfi",
+    price: "45,500,000 DA",
+    location: "Oran, Akid Lotfi",
+    beds: 3,
+    baths: 2,
+    area: 180,
+    badge: "Vente",
+    image:
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuALJBIv56j8roetvvesZEuOCQuuIRm0iuLhUQWKwblCfjtiaWXsjAF6RN5pp_hsGBs4kRLzKl-1pbFoOs84es9iCrsVt20ab90U0RFG4a6KhskCw_bEp1EbD5cKSvYBYELi3HlCmR-3j_zYSe6dC051vCwThlmzk3h_nUYSNb1ogm-ls0251AYsJH_G5yqVOU10IJ_BD9H0jIL5RX-gJPh6BbDrXg1V1lpQhmYYyGmRd7DoJ_Yme7anSLoDR3-ApAxG9NxLvqipsFJD",
+  },
+  {
+    title: "Appartement Sidi Yahia",
+    price: "250,000 DA/Mois",
+    location: "Alger, Hydra",
+    beds: 4,
+    baths: 2,
+    area: 220,
+    badge: "Location",
+    image:
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuDOdv7_IKemSBOuDkx41XhGF2NsRFs7tFmaUOmyaaKZqDVNjXJ64sLEBYzYJNScEnv_6J3duETQ2dilFUDQT8AVOTrumGATnnwnrTf9Z883WVWN2YwrrVO1cUieH7IYGbUSPSTInZn7d2gxRM7sv_BAxLwdReXAtKb6FkZRzhFZGKz2uX10oeLJYtTwQaCwMrqgXFZh3w9V6kCpORum6sR9Qe29SmdO5YQS-RH1VBBiMN-gCfDeIKEER3uHjfg4FNe1DuyYJl_aPFo3",
   },
 ];
 
 export default function HomeContent() {
   const { data: session } = useSession();
   const router = useRouter();
-  const [searchTransaction, setSearchTransaction] = useState("RENT");
+  const [searchTransaction, setSearchTransaction] = useState<"RENT" | "SALE">("RENT");
   const [searchWilaya, setSearchWilaya] = useState("");
 
   const handleSearch = () => {
@@ -125,394 +96,183 @@ export default function HomeContent() {
   };
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="-mt-20 bg-background text-on-surface font-body">
       {/* ============ HERO ============ */}
-      <section className="relative overflow-hidden">
-        {/* Background gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800" />
-        {/* Subtle pattern overlay */}
-        <div
-          className="absolute inset-0 opacity-[0.04]"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-          }}
-        />
+      <section className="relative h-screen flex items-center justify-center overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            alt="Luxurious Algerian Living Room"
+            className="w-full h-full object-cover"
+            src="https://lh3.googleusercontent.com/aida-public/AB6AXuAsPCJ5fZ9o8TU3DIbGnV464DSiQErC9zkcZpdbh9egHI84CNEFATn0WOyVBWQaUxzWX1I8KD3kC_kaAGhHR2q8P-u3GC5mtC3wJI7o9jzEn8TDHhmwj1cYb7l976fDuDVjfB4GPWC8_CtzAGfr4_RQSz09QwqfaCNlgmOLmXTMdW9lb18LRj6pWU0uGe828V9yN2eI3UMGzQxT0U06HO_cz1whp8uRAw4PWYaWmxB3wD_JAa5qwJ3v5q1e9j7PiAsJ0yrTMhyiNKsH"
+          />
+          <div className="absolute inset-0 bg-primary/20 backdrop-brightness-75" />
+        </div>
 
-        <div className="relative max-w-6xl mx-auto px-4 pt-20 pb-28">
-          {/* Badge */}
-          <div className="flex justify-center mb-8">
-            <span className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm text-white/90 text-sm font-medium px-4 py-2 rounded-full border border-white/20">
-              <span className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
-              La plateforme immobiliere n&deg;1 en Algerie
-            </span>
-          </div>
-
-          {/* Headline */}
-          <h1 className="text-center text-white text-4xl sm:text-5xl lg:text-6xl font-black leading-tight tracking-tight max-w-4xl mx-auto">
-            Trouvez votre bien
-            <br />
-            <span className="text-primary-200">en toute confiance</span>
+        <div className="relative z-10 w-full max-w-5xl px-6 text-center text-white">
+          <h1 className="font-headline font-extrabold text-5xl md:text-7xl mb-8 tracking-tighter text-glow">
+            Trouvez le foyer qui vous ressemble
           </h1>
-          <p className="text-center text-white/70 text-lg sm:text-xl mt-6 max-w-2xl mx-auto leading-relaxed">
-            ImmoDz connecte particuliers, agences et professionnels du BTP
-            pour des transactions immobilieres transparentes et humaines.
-          </p>
 
-          {/* ---- Search Box ---- */}
-          <div className="mt-12 max-w-3xl mx-auto">
-            <div className="bg-white rounded-2xl shadow-2xl p-2 sm:p-3">
-              {/* Transaction toggle */}
-              <div className="flex gap-1 mb-3 px-1">
+          {/* Search Box */}
+          <div className="bg-surface-container-lowest/90 backdrop-blur-xl p-2 md:p-4 rounded-xl editorial-shadow max-w-4xl mx-auto text-on-surface">
+            <div className="flex flex-col md:flex-row gap-4">
+              {/* Toggle Location/Vente */}
+              <div className="flex bg-surface-container-low rounded-lg p-1 w-full md:w-auto">
                 <button
                   onClick={() => setSearchTransaction("RENT")}
-                  className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                  className={`flex-1 px-6 py-2 rounded-md font-headline text-sm font-bold transition-all ${
                     searchTransaction === "RENT"
-                      ? "bg-primary-950 text-white shadow-md"
-                      : "text-gray-500 hover:bg-gray-50"
+                      ? "bg-primary text-on-primary"
+                      : "text-on-surface-variant hover:bg-surface-container"
                   }`}
                 >
                   Location
                 </button>
                 <button
                   onClick={() => setSearchTransaction("SALE")}
-                  className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                  className={`flex-1 px-6 py-2 rounded-md font-headline text-sm font-medium transition-all ${
                     searchTransaction === "SALE"
-                      ? "bg-accent-red text-white shadow-md"
-                      : "text-gray-500 hover:bg-gray-50"
+                      ? "bg-primary text-on-primary"
+                      : "text-on-surface-variant hover:bg-surface-container"
                   }`}
                 >
-                  Achat
+                  Vente
                 </button>
               </div>
 
-              {/* Search row */}
-              <div className="flex flex-col sm:flex-row gap-2">
-                <div className="flex-1 relative">
-                  <svg
-                    className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"
-                    />
-                  </svg>
-                  <select
-                    value={searchWilaya}
-                    onChange={(e) => setSearchWilaya(e.target.value)}
-                    className="w-full pl-12 pr-4 py-4 rounded-xl bg-gray-50 border-0 text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none cursor-pointer"
-                  >
-                    <option value="">Toutes les wilayas</option>
-                    {WILAYAS_POPULAIRES.map((w) => (
-                      <option key={w.code} value={w.code}>
-                        {w.code} — {w.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <button
-                  onClick={handleSearch}
-                  className="bg-primary-950 hover:bg-primary-900 text-white font-bold px-8 py-4 rounded-xl transition-all hover:shadow-lg active:scale-[0.98] flex items-center justify-center gap-2"
+              {/* Wilaya Select */}
+              <div className="flex-1 relative flex items-center bg-surface-container-low rounded-lg px-4">
+                <span className="material-symbols-outlined text-primary mr-3">
+                  location_on
+                </span>
+                <select
+                  value={searchWilaya}
+                  onChange={(e) => setSearchWilaya(e.target.value)}
+                  className="w-full bg-transparent border-none focus:ring-0 text-on-surface font-medium appearance-none py-3"
                 >
-                  <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={2}
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-                    />
-                  </svg>
-                  Rechercher
-                </button>
+                  <option value="">Toute l&apos;Algerie (Wilaya)</option>
+                  {WILAYAS.map((w) => (
+                    <option key={w.code} value={w.code}>
+                      {w.name}
+                    </option>
+                  ))}
+                </select>
               </div>
-            </div>
 
-            {/* Quick links */}
-            <div className="flex flex-wrap justify-center gap-2 mt-6">
-              {WILAYAS_POPULAIRES.slice(0, 5).map((w) => (
-                <Link
-                  key={w.code}
-                  href={`/recherche?wilayaCode=${w.code}&transactionType=RENT`}
-                  className="text-white/60 hover:text-white text-sm px-3 py-1.5 rounded-full border border-white/20 hover:border-white/40 hover:bg-white/10 transition-all"
-                >
-                  {w.name}
-                </Link>
-              ))}
+              {/* Search Button */}
+              <button
+                onClick={handleSearch}
+                className="bg-primary text-white px-10 py-4 rounded-lg font-headline font-bold flex items-center justify-center gap-2 hover:bg-primary-container transition-all"
+              >
+                <span className="material-symbols-outlined">search</span>
+                Rechercher
+              </button>
             </div>
           </div>
         </div>
-
-        {/* Wave divider */}
-        <div className="absolute bottom-0 left-0 right-0">
-          <svg viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full">
-            <path d="M0 80V40C240 0 480 0 720 20C960 40 1200 60 1440 40V80H0Z" fill="white" />
-          </svg>
-        </div>
       </section>
 
-      {/* ============ STATS BAR ============ */}
-      <section className="max-w-5xl mx-auto px-4 -mt-2 mb-16">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {STATS.map((s, i) => (
-            <div key={i} className="text-center py-6">
-              <div className="text-3xl sm:text-4xl font-black text-primary-950">{s.value}</div>
-              <div className="text-sm text-gray-500 font-medium mt-1">{s.label}</div>
-            </div>
-          ))}
+      {/* ============ CATEGORIES BENTO GRID ============ */}
+      <section className="py-24 px-6 max-w-7xl mx-auto">
+        <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+          <div>
+            <span className="text-primary font-headline font-bold tracking-widest text-xs uppercase mb-2 block">
+              Parcourir par Type
+            </span>
+            <h2 className="text-on-surface font-headline font-extrabold text-4xl">
+              Explorer les Categories
+            </h2>
+          </div>
+          <p className="text-on-surface-variant max-w-sm text-sm">
+            Decouvrez une selection rigoureuse de biens immobiliers adaptes a
+            chaque style de vie algerien.
+          </p>
         </div>
-      </section>
 
-      {/* ============ PROPERTY TYPES ============ */}
-      <section className="max-w-5xl mx-auto px-4 mb-20">
-        <h2 className="text-center text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
-          Quel type de bien recherchez-vous ?
-        </h2>
-        <p className="text-center text-gray-500 mb-10 max-w-xl mx-auto">
-          Appartements, maisons, villas, commerces ou terrains — explorez toutes les categories.
-        </p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-          {PROPERTY_TYPES.map((pt) => (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          {CATEGORIES.map((cat) => (
             <Link
-              key={pt.type}
-              href={`/recherche?propertyType=${pt.type}`}
-              className="group flex flex-col items-center gap-3 p-6 rounded-2xl border-2 border-gray-100 hover:border-primary-300 hover:shadow-lg transition-all bg-white hover:bg-primary-50"
+              key={cat.type}
+              href={`/recherche?propertyType=${cat.type}`}
+              className={`group relative aspect-[4/5] rounded-xl overflow-hidden cursor-pointer ${
+                cat.offset ? "mt-8" : ""
+              }`}
             >
-              <div className="text-gray-400 group-hover:text-primary-950 transition-colors">
-                {pt.icon}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                alt={cat.label}
+                src={cat.image}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent flex items-end p-6">
+                <h3 className="text-white font-headline font-bold text-xl">
+                  {cat.label}
+                </h3>
               </div>
-              <span className="text-sm font-semibold text-gray-700 group-hover:text-primary-950 transition-colors">
-                {pt.label}
-              </span>
             </Link>
           ))}
         </div>
       </section>
 
-      {/* ============ TRUST & VALUES ============ */}
-      <section className="bg-gray-50 py-20">
-        <div className="max-w-5xl mx-auto px-4">
-          <h2 className="text-center text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
-            Pourquoi choisir ImmoDz ?
-          </h2>
-          <p className="text-center text-gray-500 mb-12 max-w-xl mx-auto">
-            Une plateforme construite sur la confiance, la transparence et les valeurs humaines.
-          </p>
-          <div className="grid sm:grid-cols-2 gap-6">
-            {TRUST_POINTS.map((tp, i) => (
-              <div
-                key={i}
-                className="flex gap-5 p-6 rounded-2xl bg-white border border-gray-100 hover:shadow-md transition-shadow"
-              >
-                <div className="flex-shrink-0 h-14 w-14 rounded-xl bg-primary-50 flex items-center justify-center text-primary-950">
-                  {tp.icon}
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-900 text-lg mb-1">{tp.title}</h3>
-                  <p className="text-gray-500 text-sm leading-relaxed">{tp.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ============ BTP SECTION ============ */}
-      <section className="py-20">
-        <div className="max-w-5xl mx-auto px-4">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            {/* Left: illustration */}
-            <div className="relative">
-              <div className="aspect-[4/3] rounded-2xl bg-gradient-to-br from-primary-100 to-primary-50 flex items-center justify-center overflow-hidden">
-                {/* Stylized building illustration using CSS */}
-                <div className="relative w-full h-full flex items-end justify-center pb-8 gap-3">
-                  {/* Building 1 */}
-                  <div className="w-16 bg-primary-950/80 rounded-t-lg relative" style={{ height: "55%" }}>
-                    <div className="absolute inset-x-2 top-3 space-y-2">
-                      {[...Array(5)].map((_, i) => (
-                        <div key={i} className="h-2 bg-primary-200/60 rounded-sm" />
-                      ))}
-                    </div>
-                  </div>
-                  {/* Building 2 (tall) */}
-                  <div className="w-20 bg-primary-900/70 rounded-t-lg relative" style={{ height: "75%" }}>
-                    <div className="absolute inset-x-2 top-3 grid grid-cols-2 gap-1.5">
-                      {[...Array(12)].map((_, i) => (
-                        <div key={i} className="h-2 bg-primary-200/50 rounded-sm" />
-                      ))}
-                    </div>
-                  </div>
-                  {/* Building 3 */}
-                  <div className="w-14 bg-primary-800/60 rounded-t-lg relative" style={{ height: "45%" }}>
-                    <div className="absolute inset-x-2 top-3 space-y-2">
-                      {[...Array(4)].map((_, i) => (
-                        <div key={i} className="h-2 bg-primary-200/50 rounded-sm" />
-                      ))}
-                    </div>
-                  </div>
-                  {/* Crane */}
-                  <div className="absolute top-4 right-12">
-                    <div className="w-0.5 h-28 bg-primary-950/40" />
-                    <div className="absolute top-0 left-0 w-20 h-0.5 bg-primary-950/40" />
-                    <div className="absolute top-0 right-0 w-0.5 h-4 bg-primary-950/40" style={{ transform: "translateX(0)" }} />
-                  </div>
-                  {/* Ground */}
-                  <div className="absolute bottom-0 inset-x-0 h-8 bg-primary-200/40" />
-                </div>
-              </div>
-              {/* Floating card */}
-              <div className="absolute -bottom-4 -right-4 bg-white rounded-xl shadow-xl p-4 border border-gray-100">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-primary-50 flex items-center justify-center">
-                    <svg className="h-5 w-5 text-primary-950" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold text-gray-900">Programmes neufs</div>
-                    <div className="text-xs text-gray-500">Directement du promoteur</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right: text */}
-            <div>
-              <span className="text-sm font-bold text-primary-950 tracking-wide uppercase">BTP & Construction</span>
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mt-3 mb-5 leading-snug">
-                Le secteur du batiment algérien, au coeur de notre plateforme
-              </h2>
-              <p className="text-gray-500 leading-relaxed mb-6">
-                ImmoDz collabore avec les promoteurs immobiliers et les entreprises du BTP
-                pour vous donner acces aux programmes neufs des leur lancement.
-                Suivez l&apos;avancement des chantiers, découvrez les nouvelles résidences
-                et investissez en toute sérénité.
-              </p>
-              <ul className="space-y-3">
-                {[
-                  "Programmes neufs référencés dès le lancement",
-                  "Promoteurs et agences vérifiés",
-                  "Suivi des projets de construction",
-                  "Accompagnement personnalisé",
-                ].map((item, i) => (
-                  <li key={i} className="flex items-center gap-3 text-gray-700">
-                    <svg className="h-5 w-5 text-primary-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                    </svg>
-                    <span className="text-sm font-medium">{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ============ CTA SECTION ============ */}
-      <section className="py-20 bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 relative overflow-hidden">
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M20 20.5V18H0v-2h20v-2l2 3.5-2 3z'/%3E%3C/g%3E%3C/svg%3E")`,
-          }}
-        />
-        <div className="relative max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-3xl sm:text-4xl font-black text-white mb-4">
-            Pret a vous lancer ?
-          </h2>
-          <p className="text-white/70 text-lg mb-10 max-w-xl mx-auto">
-            Que vous cherchiez un bien, que vous souhaitiez publier une annonce
-            ou rejoindre notre communauté — tout commence ici.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+      {/* ============ FEATURED LISTINGS ============ */}
+      <section className="py-24 bg-surface-container-low">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex justify-between items-center mb-16">
+            <h2 className="text-on-surface font-headline font-extrabold text-4xl">
+              Biens d&apos;Exception
+            </h2>
             <Link
               href="/recherche"
-              className="inline-flex items-center justify-center gap-2 bg-white text-primary-950 font-bold px-8 py-4 rounded-xl hover:shadow-xl transition-all hover:-translate-y-0.5 active:translate-y-0"
+              className="text-primary font-headline font-bold hover:underline underline-offset-8"
             >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-              </svg>
-              Explorer les annonces
+              Voir tout le catalogue
             </Link>
-
-            {session ? (
-              <Link
-                href="/annonces/nouvelle"
-                className="inline-flex items-center justify-center gap-2 bg-white/10 backdrop-blur-sm text-white border border-white/30 font-bold px-8 py-4 rounded-xl hover:bg-white/20 transition-all hover:-translate-y-0.5 active:translate-y-0"
-              >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                </svg>
-                Deposer une annonce
-              </Link>
-            ) : (
-              <Link
-                href="/register"
-                className="inline-flex items-center justify-center gap-2 bg-white/10 backdrop-blur-sm text-white border border-white/30 font-bold px-8 py-4 rounded-xl hover:bg-white/20 transition-all hover:-translate-y-0.5 active:translate-y-0"
-              >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                </svg>
-                Creer un compte gratuit
-              </Link>
-            )}
           </div>
-        </div>
-      </section>
 
-      {/* ============ TESTIMONIAL / SOCIAL PROOF ============ */}
-      <section className="py-20">
-        <div className="max-w-5xl mx-auto px-4">
-          <h2 className="text-center text-2xl sm:text-3xl font-bold text-gray-900 mb-12">
-            Ils nous font confiance
-          </h2>
-          <div className="grid sm:grid-cols-3 gap-6">
-            {[
-              {
-                quote: "J'ai trouvé mon appartement à Alger en moins d'une semaine. Le contact direct avec le propriétaire a tout simplifié.",
-                name: "Karim B.",
-                role: "Locataire à Alger",
-              },
-              {
-                quote: "En tant qu'agence, ImmoDz nous permet de toucher des clients sérieux. L'interface est claire et professionnelle.",
-                name: "Agence El Baraka",
-                role: "Agence immobilière, Oran",
-              },
-              {
-                quote: "J'ai vendu mon terrain en 3 semaines. La visibilité sur la carte interactive fait vraiment la différence.",
-                name: "Nadia M.",
-                role: "Particulière, Constantine",
-              },
-            ].map((t, i) => (
-              <div key={i} className="p-6 rounded-2xl border border-gray-100 bg-white hover:shadow-md transition-shadow">
-                {/* Stars */}
-                <div className="flex gap-0.5 mb-4">
-                  {[...Array(5)].map((_, j) => (
-                    <svg key={j} className="h-4 w-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+            {FEATURED_LISTINGS.map((listing, i) => (
+              <div key={i} className="group">
+                <div className="relative overflow-hidden rounded-xl mb-6">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    className="w-full aspect-[4/3] object-cover"
+                    alt={listing.title}
+                    src={listing.image}
+                  />
+                  <div className="absolute top-4 left-4 bg-primary text-white text-[10px] px-3 py-1 rounded-full uppercase tracking-widest font-bold">
+                    {listing.badge}
+                  </div>
                 </div>
-                <p className="text-gray-600 text-sm leading-relaxed mb-5 italic">
-                  &ldquo;{t.quote}&rdquo;
-                </p>
-                <div>
-                  <div className="font-bold text-gray-900 text-sm">{t.name}</div>
-                  <div className="text-xs text-gray-400">{t.role}</div>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-start">
+                    <h3 className="text-xl font-headline font-extrabold">
+                      {listing.title}
+                    </h3>
+                    <span className="text-primary font-bold text-lg">
+                      {listing.price}
+                    </span>
+                  </div>
+                  <p className="text-on-surface-variant flex items-center text-sm">
+                    <span className="material-symbols-outlined text-sm mr-1">
+                      location_on
+                    </span>
+                    {listing.location}
+                  </p>
+                  <div className="flex gap-4 pt-4 text-on-surface-variant text-xs border-t border-outline-variant/15">
+                    <span className="flex items-center gap-1">
+                      <span className="material-symbols-outlined text-sm">bed</span>
+                      {listing.beds} Lits
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="material-symbols-outlined text-sm">bathtub</span>
+                      {listing.baths} Bains
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="material-symbols-outlined text-sm">square_foot</span>
+                      {listing.area} m²
+                    </span>
+                  </div>
                 </div>
               </div>
             ))}
@@ -520,69 +280,159 @@ export default function HomeContent() {
         </div>
       </section>
 
-      {/* ============ CARTE CTA ============ */}
-      <section className="max-w-5xl mx-auto px-4 mb-20">
-        <Link
-          href="/recherche"
-          className="group block relative rounded-2xl overflow-hidden bg-gradient-to-r from-primary-100 to-primary-50 border-2 border-primary-200 hover:border-primary-400 transition-all hover:shadow-xl"
-        >
-          <div className="flex items-center justify-between p-8 sm:p-12">
-            <div>
-              <h3 className="text-xl sm:text-2xl font-bold text-primary-950 mb-2">
-                Explorez la carte interactive
-              </h3>
-              <p className="text-primary-700 text-sm sm:text-base">
-                Visualisez tous les biens disponibles pres de chez vous sur notre carte en temps réel.
-              </p>
-            </div>
-            <div className="flex-shrink-0 h-14 w-14 rounded-full bg-primary-950 flex items-center justify-center text-white group-hover:scale-110 transition-transform">
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-              </svg>
-            </div>
+      {/* ============ STATS ============ */}
+      <section className="py-20 bg-primary text-white">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
+          <div className="space-y-2">
+            <div className="text-5xl font-headline font-extrabold">10,000+</div>
+            <p className="text-primary-fixed uppercase tracking-widest text-xs font-bold">
+              Biens Repertories
+            </p>
           </div>
-        </Link>
-      </section>
-
-      {/* ============ FOOTER ============ */}
-      <footer className="border-t border-gray-100 bg-gray-50">
-        <div className="max-w-5xl mx-auto px-4 py-12">
-          <div className="grid sm:grid-cols-3 gap-8">
-            {/* Brand */}
-            <div>
-              <div className="text-2xl font-black text-primary-950 mb-3">ImmoDz</div>
-              <p className="text-sm text-gray-500 leading-relaxed">
-                La plateforme immobiliere de confiance pour l&apos;Algérie.
-                Location, vente, programmes neufs.
-              </p>
-            </div>
-            {/* Navigation */}
-            <div>
-              <h4 className="font-bold text-gray-900 text-sm mb-3">Navigation</h4>
-              <ul className="space-y-2">
-                <li><Link href="/recherche" className="text-sm text-gray-500 hover:text-primary-950 transition-colors">Rechercher</Link></li>
-                <li><Link href="/recherche?transactionType=RENT" className="text-sm text-gray-500 hover:text-primary-950 transition-colors">Location</Link></li>
-                <li><Link href="/recherche?transactionType=SALE" className="text-sm text-gray-500 hover:text-primary-950 transition-colors">Vente</Link></li>
-                <li><Link href="/annonces/nouvelle" className="text-sm text-gray-500 hover:text-primary-950 transition-colors">Déposer une annonce</Link></li>
-              </ul>
-            </div>
-            {/* Compte */}
-            <div>
-              <h4 className="font-bold text-gray-900 text-sm mb-3">Compte</h4>
-              <ul className="space-y-2">
-                <li><Link href="/login" className="text-sm text-gray-500 hover:text-primary-950 transition-colors">Connexion</Link></li>
-                <li><Link href="/register" className="text-sm text-gray-500 hover:text-primary-950 transition-colors">Inscription</Link></li>
-                <li><Link href="/dashboard" className="text-sm text-gray-500 hover:text-primary-950 transition-colors">Mon tableau de bord</Link></li>
-              </ul>
-            </div>
+          <div className="space-y-2">
+            <div className="text-5xl font-headline font-extrabold">500+</div>
+            <p className="text-primary-fixed uppercase tracking-widest text-xs font-bold">
+              Agences Partenaires
+            </p>
           </div>
-          <div className="border-t border-gray-200 mt-8 pt-6 text-center">
-            <p className="text-xs text-gray-400">
-              &copy; {new Date().getFullYear()} ImmoDz. Tous droits réservés.
+          <div className="space-y-2">
+            <div className="text-5xl font-headline font-extrabold">15 Ans</div>
+            <p className="text-primary-fixed uppercase tracking-widest text-xs font-bold">
+              D&apos;Expertise Terrain
             </p>
           </div>
         </div>
-      </footer>
+      </section>
+
+      {/* ============ BTP / CONSTRUCTION ============ */}
+      <section className="py-32 px-6">
+        <div className="max-w-7xl mx-auto bg-surface-container-low rounded-[2rem] overflow-hidden flex flex-col md:flex-row">
+          <div className="w-full md:w-1/2 p-12 md:p-20 flex flex-col justify-center order-2 md:order-1">
+            <span className="text-primary font-headline font-bold tracking-widest text-xs uppercase mb-4 block">
+              Construction &amp; BTP
+            </span>
+            <h2 className="text-4xl md:text-5xl font-headline font-extrabold text-on-surface mb-8 leading-tight">
+              Batir vos reves, avec precision.
+            </h2>
+            <p className="text-on-surface-variant mb-10 text-lg leading-relaxed">
+              Au-dela de la transaction, ImmoDz vous accompagne dans la
+              concretisation de vos projets de construction. Nos architectes et
+              ingenieurs transforment vos visions en structures durables et
+              elegantes.
+            </p>
+            <div className="flex flex-col gap-6">
+              <div className="flex items-start gap-4">
+                <div className="bg-primary-fixed p-3 rounded-xl text-primary">
+                  <span className="material-symbols-outlined">architecture</span>
+                </div>
+                <div>
+                  <h4 className="font-headline font-bold">
+                    Conception Architecturale
+                  </h4>
+                  <p className="text-sm text-on-surface-variant">
+                    Plans sur mesure adaptes au climat et a l&apos;esthetique
+                    locale.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-4">
+                <div className="bg-primary-fixed p-3 rounded-xl text-primary">
+                  <span className="material-symbols-outlined">engineering</span>
+                </div>
+                <div>
+                  <h4 className="font-headline font-bold">
+                    Gestion de Chantier
+                  </h4>
+                  <p className="text-sm text-on-surface-variant">
+                    Suivi rigoureux pour garantir les delais et la qualite
+                    superieure.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="w-full md:w-1/2 order-1 md:order-2">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              className="w-full h-full object-cover min-h-[400px]"
+              alt="Modern construction architecture"
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuC85Vl3b52Tkb0kGmSORl75xwWEJoBd_yT2f6WBIC7hzoN2co1YLWIU9O28tEsgAX3BFFY5ffE9xdm3G_pCzOOElc9roJVMz-KQNKMQ6fYFh9K68FaSGk6uZXw9jos-epCEgYzVIFX2yPyffZUJEQGk5M0IrDWB9DrSJio0uI88V9kF47KrRUU-8HWZ9KDdHSkbkEx9K5VsQuA8IhQtdsTPCDaDFfM9eWURPVm7TVk6NKIofdeR6jAOb9L5G6gu52Oa61WXQyuiCIUG"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* ============ TESTIMONIALS ============ */}
+      <section className="py-24 bg-surface-container-lowest">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-headline font-extrabold">
+              Ce que nos clients disent
+            </h2>
+          </div>
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-surface-container-low p-10 md:p-16 rounded-3xl relative">
+              <span className="material-symbols-outlined text-6xl text-primary/10 absolute top-8 left-8">
+                format_quote
+              </span>
+              <div className="relative z-10">
+                <p className="text-xl md:text-2xl text-on-surface italic leading-relaxed mb-10">
+                  &ldquo;Trouver une maison a Alger a toujours ete un defi, mais
+                  avec ImmoDz, nous avons trouve notre villa a Hydra en moins de
+                  deux semaines. Le professionnalisme de l&apos;equipe est sans
+                  egal.&rdquo;
+                </p>
+                <div className="flex items-center gap-4">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    className="w-14 h-14 rounded-full object-cover"
+                    alt="Amine Benali"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuBUCZib6Z8rvn_hP8FjwNPsdEpaEy59-JX_vn6_WhcBa1aHd2OJV4vBWmhmm2lDKWByu3DIaBDWP6obceMEY7R4fWu75Z0wqn5p8NqYSaZH7DuGZiFHo1dZekOBDp2RSfR0TfqkM4GgxbvtxuVs2qFd5cyBBIBDBoRUG2STk5-zmrRhr6Lb6fnn6ScaRG0rXQCJOYbZnEDllO69ubOlJlGQNP7BXa3aqU-1zmTc5UFz_425otjOAzO1mX--7HHnTcY5bw-upObwJfQ1"
+                  />
+                  <div>
+                    <h4 className="font-bold text-on-surface">Amine Benali</h4>
+                    <p className="text-sm text-on-surface-variant">
+                      Proprietaire a Hydra
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ============ NEWSLETTER ============ */}
+      <section className="py-24">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="bg-primary-container p-12 md:p-20 rounded-[2.5rem] text-center text-white relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
+            <h2 className="text-3xl md:text-5xl font-headline font-extrabold mb-6 relative z-10">
+              Restez informe des nouveautes
+            </h2>
+            <p className="text-on-primary-container mb-12 max-w-xl mx-auto relative z-10">
+              Recevez les meilleures opportunites immobilieres et les actualites
+              du secteur directement dans votre boite mail.
+            </p>
+            <form
+              onSubmit={(e) => e.preventDefault()}
+              className="max-w-md mx-auto flex flex-col md:flex-row gap-4 relative z-10"
+            >
+              <input
+                className="flex-1 bg-white/10 border border-white/20 rounded-lg px-6 py-4 text-white placeholder:text-white/60 focus:ring-2 focus:ring-primary-fixed focus:outline-none"
+                placeholder="Votre adresse email"
+                type="email"
+              />
+              <button
+                type="submit"
+                className="bg-white text-primary px-8 py-4 rounded-lg font-headline font-bold hover:bg-primary-fixed transition-colors"
+              >
+                S&apos;inscrire
+              </button>
+            </form>
+          </div>
+        </div>
+      </section>
     </main>
   );
 }
