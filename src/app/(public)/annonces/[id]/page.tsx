@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { notFound } from "next/navigation";
 import PhotoGallery from "@/components/annonces/PhotoGallery";
 import ContactForm from "@/components/annonces/ContactForm";
+import LocationMapModal from "@/components/annonces/LocationMapModal";
 
 const PROPERTY_TYPE_LABELS: Record<string, string> = {
   APARTMENT: "Appartement",
@@ -205,24 +206,13 @@ export default async function AnnoncePage({
           </section>
 
           {/* Map Section */}
-          <section className="rounded-2xl overflow-hidden editorial-shadow h-80 relative group">
-            <img
-              src={`https://api.mapbox.com/styles/v1/mapbox/light-v11/static/pin-s+003527(${annonce.longitude ?? 3.042},${annonce.latitude ?? 36.752})/${annonce.longitude ?? 3.042},${annonce.latitude ?? 36.752},13,0/800x400@2x?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`}
-              alt={`Carte — ${annonce.wilaya.name}`}
-              className="w-full h-full object-cover grayscale contrast-125"
-            />
-            <div className="absolute inset-0 bg-primary/10 group-hover:bg-transparent transition-colors" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-              <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white ring-8 ring-primary/20">
-                <span
-                  className="material-symbols-outlined"
-                  style={{ fontVariationSettings: "'FILL' 1" }}
-                >
-                  location_on
-                </span>
-              </div>
-            </div>
-          </section>
+          <LocationMapModal
+            lng={annonce.longitude ?? 3.042}
+            lat={annonce.latitude ?? 36.752}
+            title={annonce.title}
+            locationLabel={`${annonce.wilaya.name}${annonce.commune ? `, ${annonce.commune}` : ""}${annonce.address ? ` — ${annonce.address}` : ""}`}
+            staticMapUrl={`https://api.mapbox.com/styles/v1/mapbox/light-v11/static/pin-s+003527(${annonce.longitude ?? 3.042},${annonce.latitude ?? 36.752})/${annonce.longitude ?? 3.042},${annonce.latitude ?? 36.752},13,0/800x400@2x?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`}
+          />
         </div>
 
         {/* ============ SIDEBAR (1/3) ============ */}

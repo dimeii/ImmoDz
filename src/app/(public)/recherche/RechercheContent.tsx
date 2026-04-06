@@ -27,6 +27,7 @@ export default function RechercheContent() {
   });
   const [view, setView] = useState<ViewMode>("map");
   const [selectedListings, setSelectedListings] = useState<PinProperties[]>([]);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   interface ListingDetail {
     id: string;
@@ -82,10 +83,49 @@ export default function RechercheContent() {
 
   return (
     <main className="-mt-20 pt-20 flex h-screen overflow-hidden bg-background">
+      {/* ============ MOBILE FILTER TOGGLE ============ */}
+      <button
+        onClick={() => setFiltersOpen(true)}
+        className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-primary text-on-primary px-6 py-3 rounded-full shadow-2xl shadow-primary/30 flex items-center gap-2 font-headline font-bold text-sm"
+      >
+        <span className="material-symbols-outlined text-lg">tune</span>
+        Filtres
+      </button>
+
       {/* ============ SIDEBAR FILTERS ============ */}
-      <aside className="w-[340px] bg-surface-container-lowest flex-shrink-0 flex flex-col z-40 border-r border-outline-variant/10">
+      {/* Mobile overlay backdrop */}
+      {filtersOpen && (
+        <div
+          className="md:hidden fixed inset-0 bg-black/40 z-40"
+          onClick={() => setFiltersOpen(false)}
+        />
+      )}
+      <aside
+        className={`fixed md:relative inset-y-0 left-0 w-[300px] md:w-[340px] bg-surface-container-lowest flex-shrink-0 flex flex-col z-50 md:z-40 border-r border-outline-variant/10 transition-transform duration-300 ${
+          filtersOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        }`}
+      >
+        {/* Mobile close button */}
+        <div className="md:hidden flex items-center justify-between px-6 pt-6 pb-2">
+          <h2 className="font-headline font-bold text-lg text-on-surface">Filtres</h2>
+          <button
+            onClick={() => setFiltersOpen(false)}
+            className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center"
+          >
+            <span className="material-symbols-outlined">close</span>
+          </button>
+        </div>
         <div className="p-6 overflow-y-auto scrollbar-hide flex-1">
           <SearchFilters onFiltersChange={handleFiltersChange} />
+        </div>
+        {/* Mobile apply button */}
+        <div className="md:hidden px-6 pb-6">
+          <button
+            onClick={() => setFiltersOpen(false)}
+            className="w-full bg-primary text-on-primary py-3 rounded-xl font-headline font-bold text-sm"
+          >
+            Appliquer les filtres
+          </button>
         </div>
       </aside>
 
@@ -130,7 +170,7 @@ export default function RechercheContent() {
 
         {/* ============ PROPERTY DETAIL PANEL ============ */}
         {selectedListings.length > 0 && (
-          <div className="absolute right-6 top-6 bottom-6 w-[380px] bg-surface-container-lowest rounded-2xl shadow-2xl z-40 flex flex-col overflow-hidden border border-outline-variant/10 animate-[fadeIn_0.2s_ease-out]">
+          <div className="absolute inset-x-3 bottom-3 top-auto max-h-[70vh] md:inset-x-auto md:right-6 md:top-6 md:bottom-6 md:max-h-none md:w-[380px] bg-surface-container-lowest rounded-2xl shadow-2xl z-40 flex flex-col overflow-hidden border border-outline-variant/10 animate-[fadeIn_0.2s_ease-out]">
             {/* Panel header with close */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-surface-container flex-shrink-0">
               <h3 className="text-sm font-bold font-headline text-on-surface">

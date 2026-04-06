@@ -2,12 +2,35 @@
 
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
+import { useEffect, useState, useRef } from "react";
 
 export default function Navbar() {
   const { data: session } = useSession();
+  const [visible, setVisible] = useState(true);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY;
+      // Show when scrolling up or near top
+      if (y < 50 || y < lastScrollY.current) {
+        setVisible(true);
+      } else {
+        setVisible(false);
+      }
+      lastScrollY.current = y;
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
-    <header className="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-md shadow-sm">
+    <header
+      className={`fixed top-0 w-full z-50 bg-white/70 backdrop-blur-md shadow-sm transition-transform duration-300 ${
+        visible ? "translate-y-0" : "-translate-y-full"
+      }`}
+    >
       <nav className="flex justify-between items-center px-8 py-4 max-w-7xl mx-auto">
         <Link
           href="/"
@@ -48,7 +71,7 @@ export default function Navbar() {
             <>
               <Link
                 href="/dashboard"
-                className="text-sm font-medium text-emerald-800/60 hover:text-emerald-900 transition-colors"
+                className="hidden md:inline text-sm font-medium text-emerald-800/60 hover:text-emerald-900 transition-colors"
               >
                 Mon compte
               </Link>
@@ -60,7 +83,7 @@ export default function Navbar() {
               </Link>
               <button
                 onClick={() => signOut()}
-                className="text-sm font-medium text-emerald-800/60 hover:text-emerald-900 transition-colors"
+                className="hidden md:inline text-sm font-medium text-emerald-800/60 hover:text-emerald-900 transition-colors"
               >
                 Deconnexion
               </button>
@@ -69,7 +92,7 @@ export default function Navbar() {
             <>
               <Link
                 href="/login"
-                className="text-sm font-medium text-emerald-800/60 hover:text-emerald-900 transition-colors"
+                className="hidden md:inline text-sm font-medium text-emerald-800/60 hover:text-emerald-900 transition-colors"
               >
                 Connexion
               </Link>
