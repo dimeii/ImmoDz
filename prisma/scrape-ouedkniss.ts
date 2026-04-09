@@ -5,11 +5,41 @@ const prisma = new PrismaClient();
 
 // ─── Config ──────────────────────────────────────────────
 const GRAPHQL_URL = "https://api.ouedkniss.com/graphql";
-const PAGES_TO_SCRAPE = 30; // 10 per page = ~300 listings
-const DELAY_MS = 500; // polite delay between requests
+const DELAY_MS = 600; // polite delay between requests
 
 // ─── Wilayas avec quartiers (pour extraction) ───────────
 const WILAYAS_WITH_QUARTIERS = new Set([16, 31, 27, 25, 23, 19]); // Alger, Oran, Mostaganem, Constantine, Annaba, Sétif
+
+// ─── Grosses villes prioritaires (+ pages) ──────────────
+// Format: [wilayaCode, pagesÀScraper, nom]
+const BIG_CITIES: [number, number, string][] = [
+  [16, 15, "Alger"],
+  [31, 12, "Oran"],
+  [25, 10, "Constantine"],
+  [23, 8, "Annaba"],
+  [19, 8, "Sétif"],
+  [9, 8, "Blida"],
+  [15, 7, "Tizi Ouzou"],
+  [6, 7, "Béjaïa"],
+  [5, 6, "Batna"],
+  [35, 6, "Boumerdès"],
+  [42, 6, "Tipaza"],
+  [26, 5, "Médéa"],
+  [34, 5, "Bordj Bou Arréridj"],
+  [43, 5, "Mila"],
+  [41, 5, "Souk Ahras"],
+  [36, 5, "El Tarf"],
+  [18, 4, "Jijel"],
+  [21, 4, "Skikda"],
+  [38, 4, "Tissemsilt"],
+  [2, 4, "Chlef"],
+  [22, 4, "Sidi Bel Abbès"],
+  [13, 4, "Tlemcen"],
+  [40, 4, "Khenchela"],
+  [28, 3, "M'Sila"],
+  [10, 3, "Bouira"],
+  [14, 3, "Tiaret"],
+];
 
 // ─── Coordinate fallback by wilaya code ──────────────────
 const wilayaCoords: Record<number, { lat: number; lng: number }> = {
@@ -78,12 +108,8 @@ function mapCategory(slugs: string[]): {
   transactionType: "RENT" | "SALE";
   propertyType: string;
 } {
-  const slugSet = new Set(slugs);
-
-  const transactionType = slugSet.has("immobilier-location") ||
-    slugs.some((s) => s.includes("location"))
-    ? "RENT"
-    : "SALE";
+  const transactionType =
+    slugs.some((s) => s.includes("location")) ? "RENT" : "SALE";
 
   let propertyType = "OTHER";
   if (slugs.some((s) => s.includes("appartement"))) propertyType = "APARTMENT";
@@ -98,29 +124,26 @@ function mapCategory(slugs: string[]): {
   return { transactionType, propertyType };
 }
 
-// ─── Parse rooms from title (F3, F4, etc.) ──────────────
 function parseRooms(title: string): number | null {
   const match = title.match(/\bF(\d)\b/i);
   return match ? parseInt(match[1]) : null;
 }
 
-// ─── Parse surface from description ─────────────────────
 function parseSurface(text: string): number | null {
   const match = text.match(/(\d{2,4})\s*(?:m²|m2|metre|mètre)/i);
   return match ? parseInt(match[1]) : null;
 }
 
-// ─── Estimate bedrooms from rooms ───────────────────────
 function estimateBedrooms(rooms: number | null): number | null {
   if (!rooms) return null;
   if (rooms <= 1) return 1;
   return rooms - 1;
 }
 
-// ─── GraphQL query ──────────────────────────────────────
+// ─── GraphQL query (filtre par regionId) ────────────────
 const SEARCH_QUERY = `
-  query SearchImmobilier($page: Int) {
-    search(filter: { categorySlug: "immobilier", page: $page }) {
+  query SearchImmobilier($page: Int, $regionIds: [ID]) {
+    search(filter: { categorySlug: "immobilier", page: $page, regionIds: $regionIds }) {
       announcements {
         data {
           id
@@ -157,18 +180,21 @@ interface OKAnnouncement {
   medias: { mediaUrl: string }[];
 }
 
-async function fetchPage(page: number): Promise<{
+async function fetchPage(
+  page: number,
+  regionId?: number
+): Promise<{
   data: OKAnnouncement[];
   lastPage: number;
   total: number;
 }> {
+  const variables: Record<string, unknown> = { page };
+  if (regionId !== undefined) variables.regionIds = [regionId];
+
   const res = await fetch(GRAPHQL_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      query: SEARCH_QUERY,
-      variables: { page },
-    }),
+    body: JSON.stringify({ query: SEARCH_QUERY, variables }),
   });
 
   if (!res.ok) {
@@ -192,141 +218,73 @@ function sleep(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-async function main() {
-  console.log("=== OuedKniss Immobilier Scraper ===\n");
+async function scrapeRegion(
+  regionId: number,
+  regionName: string,
+  maxPages: number,
+  scrapeUserId: string,
+  validWilayaCodes: Set<number>,
+  quartierMap: Map<string, string>,
+  existingOkIds: Set<string>,
+  existingTitleKeys: Set<string>
+): Promise<{ inserted: number; skipped: number; errors: number }> {
+  let inserted = 0;
+  let skipped = 0;
+  let errors = 0;
 
-  // Ensure wilayas exist
-  const wilayaCount = await prisma.wilaya.count();
-  if (wilayaCount === 0) {
-    console.error("No wilayas in DB. Run the main seed first: npm run db:seed");
-    process.exit(1);
-  }
-
-  // Get valid wilaya codes from DB
-  const dbWilayas = await prisma.wilaya.findMany({ select: { code: true } });
-  const validWilayaCodes = new Set(dbWilayas.map((w) => w.code));
-
-  // Load quartiers map for lookup: "quartierName-wilayaCode" → id
-  const allQuartiers = await prisma.quartier.findMany({
-    select: { id: true, name: true, wilayaCode: true },
-  });
-  const quartierMap = new Map(
-    allQuartiers.map((q) => [`${q.name.toLowerCase()}-${q.wilayaCode}`, q.id])
-  );
-  console.log(`Loaded ${quartierMap.size} quartiers for matching`);
-
-  // We need a user to attach listings to
-  let scrapeUser = await prisma.user.findFirst({
-    where: { email: "scraper@immodz.local" },
-  });
-  if (!scrapeUser) {
-    const hashedPassword = await bcrypt.hash("password123", 10);
-    scrapeUser = await prisma.user.create({
-      data: {
-        email: "scraper@immodz.local",
-        name: "OuedKniss Import",
-        password: hashedPassword,
-        role: "USER",
-      },
-    });
-    console.log("Created scraper user: scraper@immodz.local");
-  }
-
-  // Track existing ouedkniss IDs to avoid duplicates via title+wilaya combo AND photo publicId
-  const existingPhotos = await prisma.listingPhoto.findMany({
-    where: { publicId: { startsWith: "ouedkniss-" } },
-    select: { publicId: true },
-  });
-  const existingOkIds = new Set(
-    existingPhotos.map((p) => p.publicId.split("-")[1])
-  );
-
-  // Also track by title+wilaya to catch duplicates even if re-posted with new OK id
-  const existingListings = await prisma.listing.findMany({
-    where: { userId: scrapeUser.id },
-    select: { title: true, wilayaCode: true },
-  });
-  const existingTitleKeys = new Set(
-    existingListings.map((l) => `${l.title}::${l.wilayaCode}`)
-  );
-
-  console.log(`Found ${existingOkIds.size} existing OuedKniss IDs in DB`);
-  console.log(`Found ${existingTitleKeys.size} existing title+wilaya combos`);
-
-  let totalInserted = 0;
-  let totalSkipped = 0;
-  let totalErrors = 0;
-
-  for (let page = 1; page <= PAGES_TO_SCRAPE; page++) {
+  for (let page = 1; page <= maxPages; page++) {
     try {
-      console.log(`\nFetching page ${page}/${PAGES_TO_SCRAPE}...`);
-      const { data, total } = await fetchPage(page);
+      process.stdout.write(
+        `  [${regionName}] Page ${page}/${maxPages}... `
+      );
+      const { data, lastPage, total } = await fetchPage(page, regionId);
 
       if (page === 1) {
-        console.log(`Total listings available: ${total}`);
+        console.log(`(total disponible: ${total}, lastPage: ${lastPage})`);
+      } else {
+        console.log(`(${data.length} annonces)`);
       }
+
+      // Don't go beyond what the API has
+      if (page > lastPage) break;
 
       for (const item of data) {
         try {
-          // Skip if already imported (check by OuedKniss ID)
-          if (existingOkIds.has(item.id)) {
-            totalSkipped++;
-            continue;
-          }
+          // Skip already imported
+          if (existingOkIds.has(item.id)) { skipped++; continue; }
 
-          // Skip listings without images
-          if (!item.medias || item.medias.length === 0) {
-            totalSkipped++;
-            continue;
-          }
+          // Skip without photos
+          if (!item.medias || item.medias.length === 0) { skipped++; continue; }
 
-          // Skip listings with "Cherche" (looking for) — these are demands, not offers
-          if (item.title.startsWith("Cherche")) {
-            totalSkipped++;
-            continue;
-          }
+          // Skip "Cherche" (demandes)
+          if (/^cherche\b/i.test(item.title)) { skipped++; continue; }
 
           // Map categories
           const categorySlugs = item.categories.map((c) => c.slug);
           const { transactionType, propertyType } = mapCategory(categorySlugs);
 
-          // Wilaya code from region
+          // Wilaya code
           const city = item.cities[0];
-          if (!city) {
-            totalSkipped++;
-            continue;
-          }
+          if (!city) { skipped++; continue; }
           const wilayaCode = parseInt(city.region.id);
-          if (!validWilayaCodes.has(wilayaCode)) {
-            totalSkipped++;
-            continue;
-          }
+          if (!validWilayaCodes.has(wilayaCode)) { skipped++; continue; }
 
           // Skip duplicate by title+wilaya
           const titleKey = `${item.title}::${wilayaCode}`;
-          if (existingTitleKeys.has(titleKey)) {
-            totalSkipped++;
-            continue;
-          }
+          if (existingTitleKeys.has(titleKey)) { skipped++; continue; }
 
-          // Price — skip if null and it's a sale (too important)
+          // Skip if no price (except rentals where price may be negotiable)
           const price = item.price;
-          if (price === null || price === 0) {
-            totalSkipped++;
-            continue;
-          }
+          if (!price || price === 0) { skipped++; continue; }
 
-          // Parse details from title & description
           const rooms = parseRooms(item.title);
           const surface = parseSurface(item.title + " " + item.description);
           const bedrooms = estimateBedrooms(rooms);
 
-          // Coordinates with some randomness
           const baseCoords = wilayaCoords[wilayaCode] || { lat: 36.75, lng: 3.05 };
-          const lat = baseCoords.lat + (Math.random() - 0.5) * 0.02;
-          const lng = baseCoords.lng + (Math.random() - 0.5) * 0.02;
+          const lat = baseCoords.lat + (Math.random() - 0.5) * 0.04;
+          const lng = baseCoords.lng + (Math.random() - 0.5) * 0.04;
 
-          // Parse features from description
           const descLower = (item.description || "").toLowerCase();
           const hasElevator = /ascenseur/i.test(descLower);
           const hasParking = /parking|garage/i.test(descLower);
@@ -334,15 +292,12 @@ async function main() {
           const hasPool = /piscine/i.test(descLower);
           const isFurnished = /meubl[ée]/i.test(descLower);
 
-          // Try to match quartier from city name (OuedKniss cities are often quartier names)
           let quartierId: string | null = null;
           if (WILAYAS_WITH_QUARTIERS.has(wilayaCode)) {
-            const cityNameLower = city.name.toLowerCase();
-            const key = `${cityNameLower}-${wilayaCode}`;
+            const key = `${city.name.toLowerCase()}-${wilayaCode}`;
             quartierId = quartierMap.get(key) ?? null;
           }
 
-          // Create listing
           const listing = await prisma.listing.create({
             data: {
               title: item.title,
@@ -365,11 +320,11 @@ async function main() {
               hasGarden,
               hasPool,
               isFurnished,
-              userId: scrapeUser.id,
+              userId: scrapeUserId,
             },
           });
 
-          // Add photos (max 5 per listing to keep storage reasonable)
+          // Max 5 photos par annonce
           const photos = item.medias.slice(0, 5);
           for (let i = 0; i < photos.length; i++) {
             await prisma.listingPhoto.create({
@@ -385,31 +340,115 @@ async function main() {
 
           existingOkIds.add(item.id);
           existingTitleKeys.add(titleKey);
-          totalInserted++;
-
-          if (totalInserted % 10 === 0) {
-            console.log(`  -> ${totalInserted} listings inserted so far...`);
-          }
+          inserted++;
         } catch (err) {
-          totalErrors++;
-          console.warn(`  Warning: failed to insert "${item.title}": ${err}`);
+          errors++;
+          console.warn(`  Warning: "${item.title}": ${err}`);
         }
       }
 
-      // Polite delay
-      if (page < PAGES_TO_SCRAPE) {
-        await sleep(DELAY_MS);
-      }
+      if (page < maxPages) await sleep(DELAY_MS);
     } catch (err) {
-      console.error(`Error fetching page ${page}:`, err);
-      // Continue with next page
+      console.error(`  Error fetching [${regionName}] page ${page}:`, err);
     }
   }
 
-  console.log(`\n=== Scraping complete ===`);
-  console.log(`Inserted: ${totalInserted}`);
-  console.log(`Skipped:  ${totalSkipped}`);
-  console.log(`Errors:   ${totalErrors}`);
+  return { inserted, skipped, errors };
+}
+
+async function main() {
+  console.log("=== OuedKniss Immobilier Scraper (Grosses villes en priorité) ===\n");
+
+  const wilayaCount = await prisma.wilaya.count();
+  if (wilayaCount === 0) {
+    console.error("No wilayas in DB. Run: npm run db:seed");
+    process.exit(1);
+  }
+
+  const dbWilayas = await prisma.wilaya.findMany({ select: { code: true } });
+  const validWilayaCodes = new Set(dbWilayas.map((w) => w.code));
+
+  const allQuartiers = await prisma.quartier.findMany({
+    select: { id: true, name: true, wilayaCode: true },
+  });
+  const quartierMap = new Map(
+    allQuartiers.map((q) => [`${q.name.toLowerCase()}-${q.wilayaCode}`, q.id])
+  );
+  console.log(`Quartiers chargés: ${quartierMap.size}`);
+
+  let scrapeUser = await prisma.user.findFirst({
+    where: { email: "scraper@immodz.local" },
+  });
+  if (!scrapeUser) {
+    const hashedPassword = await bcrypt.hash("password123", 10);
+    scrapeUser = await prisma.user.create({
+      data: {
+        email: "scraper@immodz.local",
+        name: "OuedKniss Import",
+        password: hashedPassword,
+        role: "USER",
+      },
+    });
+    console.log("Utilisateur scraper créé.");
+  }
+
+  // Charger les IDs déjà importés
+  const existingPhotos = await prisma.listingPhoto.findMany({
+    where: { publicId: { startsWith: "ouedkniss-" } },
+    select: { publicId: true },
+  });
+  // publicId format: "ouedkniss-{okId}-{photoIndex}"
+  const existingOkIds = new Set(
+    existingPhotos.map((p) => {
+      const parts = p.publicId.split("-");
+      return parts.slice(1, parts.length - 1).join("-");
+    })
+  );
+
+  const existingListings = await prisma.listing.findMany({
+    where: { userId: scrapeUser.id },
+    select: { title: true, wilayaCode: true },
+  });
+  const existingTitleKeys = new Set(
+    existingListings.map((l) => `${l.title}::${l.wilayaCode}`)
+  );
+
+  console.log(`IDs OuedKniss déjà en DB: ${existingOkIds.size}`);
+  console.log(`Combos titre+wilaya en DB: ${existingTitleKeys.size}`);
+  console.log(`\nVilles à scraper: ${BIG_CITIES.length}\n`);
+
+  let totalInserted = 0;
+  let totalSkipped = 0;
+  let totalErrors = 0;
+
+  for (const [wilayaCode, pages, cityName] of BIG_CITIES) {
+    console.log(`\n─── ${cityName} (wilaya ${wilayaCode}, ${pages} pages) ───`);
+    const result = await scrapeRegion(
+      wilayaCode,
+      cityName,
+      pages,
+      scrapeUser.id,
+      validWilayaCodes,
+      quartierMap,
+      existingOkIds,
+      existingTitleKeys
+    );
+    console.log(
+      `  → Insérées: ${result.inserted} | Ignorées: ${result.skipped} | Erreurs: ${result.errors}`
+    );
+    totalInserted += result.inserted;
+    totalSkipped += result.skipped;
+    totalErrors += result.errors;
+
+    // Pause entre les villes
+    await sleep(1000);
+  }
+
+  console.log(`\n${"═".repeat(50)}`);
+  console.log(`Scraping terminé`);
+  console.log(`Insérées : ${totalInserted}`);
+  console.log(`Ignorées : ${totalSkipped}`);
+  console.log(`Erreurs  : ${totalErrors}`);
 }
 
 main()

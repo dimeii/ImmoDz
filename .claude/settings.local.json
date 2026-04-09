@@ -34,7 +34,27 @@
       "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(len\\(d[''''features'''']\\), ''''pins''''\\)\")",
       "Bash(curl -s http://localhost:3000/api/map/pins?bounds=2.7,36.6,3.5,36.9)",
       "Bash(ls:*)",
-      "Bash(find /c/DEV/ImmoDz -type f \\\\\\(-name *map* -o -name *Map* \\\\\\))"
+      "Bash(find /c/DEV/ImmoDz -type f \\\\\\(-name *map* -o -name *Map* \\\\\\))",
+      "Bash(sc query:*)",
+      "Bash(net start:*)",
+      "Bash(git checkout:*)",
+      "Bash(git merge:*)",
+      "Bash(git stash:*)",
+      "Bash(pg_isready -h localhost -p 5432)",
+      "Bash(curl -v --connect-timeout 10 \"postgresql://postgres:AXHggdtDCJwznodVfKPrLCnoRooBIuIe@junction.proxy.rlwy.net:12691/railway\")",
+      "Bash(curl -v --connect-timeout 10 telnet://junction.proxy.rlwy.net:12691)",
+      "Bash(ping:*)",
+      "Bash(node:*)",
+      "Bash(DATABASE_URL=\"test123\" node -e \"console.log\\('DATABASE_URL:', process.env.DATABASE_URL\\)\")",
+      "Bash(DATABASE_URL=\"postgresql://postgres:AXHggdtDCJwznodVfKPrLCnoRooBIuIe@junction.proxy.rlwy.net:12691/railway\" npx tsx prisma/scrape-ouedkniss.ts)",
+      "Bash(set DATABASE_URL=postgresql://postgres:AXHggdtDCJwznodVfKPrLCnoRooBIuIe@junction.proxy.rlwy.net:12691/railway)",
+      "Bash(export DATABASE_URL=\"postgresql://postgres:AXHggdtDCJwznodVfKPrLCnoRooBIuIe@junction.proxy.rlwy.net:12691/railway\")",
+      "Bash(export DATABASE_URL=\"postgresql://postgres:AXHggdtDCJwznodVfKPrLCnoRooBIuIe@junction.proxy.rlwy.net:12691/railway?sslmode=require\")",
+      "Bash(NODE_TLS_REJECT_UNAUTHORIZED=0 npx tsx prisma/scrape-ouedkniss.ts)",
+      "Bash(curl -s -X POST https://api.ouedkniss.com/graphql -H 'Content-Type: application/json' -d '{\"query\":\"{ search\\(filter: { categorySlug: \\\\\"immobilier\\\\\", page: 1, regionId: 16 }\\) { announcements { data { id title } paginatorInfo { total } } } }\"}')",
+      "Bash(curl -s -X POST https://api.ouedkniss.com/graphql -H 'Content-Type: application/json' -d '{\"query\":\"{ search\\(filter: { categorySlug: \\\\\"immobilier\\\\\", page: 1 }\\) { announcements { data { id title price cities { name region { id name } } medias { mediaUrl } categories { slug } } paginatorInfo { total lastPage } } } }\"}')",
+      "Bash(curl:*)",
+      "Bash(taskkill /F /IM node.exe)"
     ]
   }
 }
