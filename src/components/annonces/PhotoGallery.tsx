@@ -61,7 +61,7 @@ export default function PhotoGallery({ photos }: PhotoGalleryProps) {
   return (
     <>
       {/* Editorial Grid */}
-      <div className="grid grid-cols-12 gap-4 h-[500px]">
+      <div className="relative grid grid-cols-12 gap-4 h-[300px] md:h-[500px] overflow-hidden">
         {/* Main large photo */}
         <div
           className="col-span-12 md:col-span-8 h-full rounded-xl overflow-hidden relative group cursor-pointer"

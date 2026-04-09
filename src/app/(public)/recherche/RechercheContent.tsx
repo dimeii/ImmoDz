@@ -227,9 +227,13 @@ export default function RechercheContent() {
                               ? "Location"
                               : "Vente"}
                           </div>
-                          <h3 className="text-xl font-bold font-headline text-on-surface tracking-tight leading-tight">
+                          <Link
+                            href={`/annonces/${listing.id}`}
+                            target="_blank"
+                            className="text-xl font-bold font-headline text-on-surface tracking-tight leading-tight hover:text-primary transition-colors"
+                          >
                             {listing.title}
-                          </h3>
+                          </Link>
                         </div>
                         <div className="text-right flex-shrink-0 ml-4">
                           <p className="text-2xl font-bold text-primary font-headline">
@@ -299,12 +303,14 @@ export default function RechercheContent() {
                       <div className="grid grid-cols-2 gap-3 pt-2">
                         <Link
                           href={`/annonces/${listing.id}`}
+                          target="_blank"
                           className="py-3 px-4 border border-outline text-primary font-bold rounded-xl text-xs hover:bg-surface-container-low transition-all text-center"
                         >
                           Voir le détail
                         </Link>
                         <Link
                           href={`/annonces/${listing.id}#contact`}
+                          target="_blank"
                           className="py-3 px-4 bg-primary text-on-primary font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
                         >
                           <span className="material-symbols-outlined text-sm">

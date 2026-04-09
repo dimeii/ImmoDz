@@ -83,7 +83,7 @@ export default function AnnonceList({ filters }: AnnonceListProps) {
               wilaya: { name: string };
               photos: { url: string }[];
             }) => (
-              <Link key={annonce.id} href={`/annonces/${annonce.id}`}>
+              <Link key={annonce.id} href={`/annonces/${annonce.id}`} target="_blank">
                 <AnnonceCard
                   id={annonce.id}
                   title={annonce.title}
