@@ -164,6 +164,7 @@ model Listing {
   address    String?
   wilayaCode Int
   commune    String?
+  quartierId String?
 
   // Caractéristiques
   surface     Float?
@@ -200,11 +201,13 @@ model Listing {
 
   user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   wilaya          Wilaya           @relation(fields: [wilayaCode], references: [code])
+  quartier        Quartier?        @relation(fields: [quartierId], references: [id])
   photos          ListingPhoto[]
   contactRequests ContactRequest[]
 
   @@index([status, transactionType, propertyType])
   @@index([wilayaCode])
+  @@index([quartierId])
   @@index([price])
   @@map("listings")
 }
@@ -245,11 +248,24 @@ model ContactRequest {
 // ─── Référence ───────────────────────────────────────────
 
 model Wilaya {
-  code     Int       @id
-  name     String
-  nameAr   String?
-  listings Listing[]
-  agencies Agency[]
+  code       Int         @id
+  name       String
+  nameAr     String?
+  listings   Listing[]
+  agencies   Agency[]
+  quartiers  Quartier[]
 
   @@map("wilayas")
+}
+
+model Quartier {
+  id         String    @id @default(cuid())
+  name       String
+  wilayaCode Int
+  wilaya     Wilaya    @relation(fields: [wilayaCode], references: [code])
+  listings   Listing[]
+
+  @@unique([name, wilayaCode])
+  @@index([wilayaCode])
+  @@map("quartiers")
 }

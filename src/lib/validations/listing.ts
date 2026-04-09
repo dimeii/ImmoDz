@@ -19,6 +19,7 @@ export const createListingSchema = z.object({
   address: z.string().optional(),
   wilayaCode: z.number().int().min(1).max(58),
   commune: z.string().optional(),
+  quartierId: z.string().optional(),
   surface: z.number().positive().optional(),
   rooms: z.number().int().positive().optional(),
   bedrooms: z.number().int().nonnegative().optional(),
@@ -40,6 +41,11 @@ export const createListingSchema = z.object({
   lng: z.number().min(-180).max(180).optional(),
 });
 
+const booleanFilter = z
+  .enum(["true", "false", ""])
+  .optional()
+  .transform((v) => (v === "true" ? true : v === "false" ? false : undefined));
+
 export const searchFiltersSchema = z.object({
   transactionType: z.enum(["RENT", "SALE"]).optional(),
   propertyType: z
@@ -56,11 +62,26 @@ export const searchFiltersSchema = z.object({
     ])
     .optional(),
   wilayaCode: z.coerce.number().int().min(1).max(58).optional(),
+  quartier: z.string().optional(),
   priceMin: z.coerce.number().nonnegative().optional(),
   priceMax: z.coerce.number().positive().optional(),
   surfaceMin: z.coerce.number().positive().optional(),
   surfaceMax: z.coerce.number().positive().optional(),
   rooms: z.coerce.number().int().positive().optional(),
+  bedrooms: z.coerce.number().int().positive().optional(),
+  bathrooms: z.coerce.number().int().positive().optional(),
+  floor: z.coerce.number().int().nonnegative().optional(),
+  yearBuilt: z.coerce.number().int().min(1900).max(new Date().getFullYear()).optional(),
+  hasElevator: booleanFilter,
+  hasParking: booleanFilter,
+  hasGarden: booleanFilter,
+  hasPool: booleanFilter,
+  isFurnished: booleanFilter,
+  hasStorefront: booleanFilter,
+  hasWater: booleanFilter,
+  hasElectricity: booleanFilter,
+  hasGas: booleanFilter,
+  hasFiber: booleanFilter,
 });
 
 export type CreateListingInput = z.infer<typeof createListingSchema>;

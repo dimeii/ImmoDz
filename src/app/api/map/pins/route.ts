@@ -41,7 +41,18 @@ export async function GET(request: NextRequest) {
     if (transactionType) where.transactionType = transactionType;
     if (propertyType) where.propertyType = propertyType;
     if (wilayaCode) where.wilayaCode = Number(wilayaCode);
+    const quartier = searchParams.get("quartier");
+    if (quartier) where.quartierId = quartier;
     if (rooms) where.rooms = { gte: Number(rooms) };
+
+    const bedrooms = searchParams.get("bedrooms");
+    const bathrooms = searchParams.get("bathrooms");
+    const floor = searchParams.get("floor");
+    const yearBuilt = searchParams.get("yearBuilt");
+    if (bedrooms) where.bedrooms = { gte: Number(bedrooms) };
+    if (bathrooms) where.bathrooms = { gte: Number(bathrooms) };
+    if (floor) where.floor = { gte: Number(floor) };
+    if (yearBuilt) where.yearBuilt = { gte: Number(yearBuilt) };
 
     if (priceMin || priceMax) {
       const priceFilter: Record<string, number> = {};
@@ -55,6 +66,15 @@ export async function GET(request: NextRequest) {
       if (surfaceMin) surfaceFilter.gte = Number(surfaceMin);
       if (surfaceMax) surfaceFilter.lte = Number(surfaceMax);
       where.surface = surfaceFilter;
+    }
+
+    // Boolean amenities
+    const booleanKeys = [
+      "hasElevator", "hasParking", "hasGarden", "hasPool", "isFurnished",
+      "hasStorefront", "hasWater", "hasElectricity", "hasGas", "hasFiber",
+    ];
+    for (const key of booleanKeys) {
+      if (searchParams.get(key) === "true") where[key] = true;
     }
 
     const listings = await db.listing.findMany({

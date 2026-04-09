@@ -15,7 +15,12 @@ export async function GET(request: NextRequest) {
     if (filters.transactionType) where.transactionType = filters.transactionType;
     if (filters.propertyType) where.propertyType = filters.propertyType;
     if (filters.wilayaCode) where.wilayaCode = filters.wilayaCode;
+    if (filters.quartier) where.quartierId = filters.quartier;
     if (filters.rooms) where.rooms = { gte: filters.rooms };
+    if (filters.bedrooms) where.bedrooms = { gte: filters.bedrooms };
+    if (filters.bathrooms) where.bathrooms = { gte: filters.bathrooms };
+    if (filters.floor != null) where.floor = { gte: filters.floor };
+    if (filters.yearBuilt) where.yearBuilt = { gte: filters.yearBuilt };
     if (filters.priceMin || filters.priceMax) {
       where.price = {
         ...(filters.priceMin ? { gte: filters.priceMin } : {}),
@@ -28,12 +33,21 @@ export async function GET(request: NextRequest) {
         ...(filters.surfaceMax ? { lte: filters.surfaceMax } : {}),
       };
     }
+    // Boolean amenities
+    const booleanKeys = [
+      "hasElevator", "hasParking", "hasGarden", "hasPool", "isFurnished",
+      "hasStorefront", "hasWater", "hasElectricity", "hasGas", "hasFiber",
+    ] as const;
+    for (const key of booleanKeys) {
+      if (filters[key] === true) where[key] = true;
+    }
 
     const [annonces, total] = await Promise.all([
       db.listing.findMany({
         where,
         include: {
           wilaya: true,
+        quartier: true,
           photos: { take: 1, orderBy: { order: "asc" } },
           user: { select: { name: true } },
         },
