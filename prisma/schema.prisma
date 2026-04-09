@@ -164,6 +164,7 @@ model Listing {
   address    String?
   wilayaCode Int
   commune    String?
+  quartierId String?
 
   // Caractéristiques
   surface     Float?
@@ -179,21 +180,34 @@ model Listing {
   hasPool     Boolean @default(false)
   isFurnished Boolean @default(false)
 
+  // Commercial / Local
+  hasStorefront  Boolean @default(false) // Devanture
+  hasWater       Boolean @default(false) // Accès eau
+  hasElectricity Boolean @default(false) // Accès électricité
+  hasGas         Boolean @default(false) // Accès gaz
+  hasFiber       Boolean @default(false) // Fibre optique
+
   // Relations
   userId    String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // Coordonnées GPS (fallback sans PostGIS)
+  latitude  Float?
+  longitude Float?
 
   // NOTE: PostGIS location column (GEOGRAPHY(Point,4326)) ajoutée manuellement
   // Voir CLAUDE.md Gotchas #1
 
   user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   wilaya          Wilaya           @relation(fields: [wilayaCode], references: [code])
+  quartier        Quartier?        @relation(fields: [quartierId], references: [id])
   photos          ListingPhoto[]
   contactRequests ContactRequest[]
 
   @@index([status, transactionType, propertyType])
   @@index([wilayaCode])
+  @@index([quartierId])
   @@index([price])
   @@map("listings")
 }
@@ -234,11 +248,24 @@ model ContactRequest {
 // ─── Référence ───────────────────────────────────────────
 
 model Wilaya {
-  code     Int       @id
-  name     String
-  nameAr   String?
-  listings Listing[]
-  agencies Agency[]
+  code       Int         @id
+  name       String
+  nameAr     String?
+  listings   Listing[]
+  agencies   Agency[]
+  quartiers  Quartier[]
 
   @@map("wilayas")
+}
+
+model Quartier {
+  id         String    @id @default(cuid())
+  name       String
+  wilayaCode Int
+  wilaya     Wilaya    @relation(fields: [wilayaCode], references: [code])
+  listings   Listing[]
+
+  @@unique([name, wilayaCode])
+  @@index([wilayaCode])
+  @@map("quartiers")
 }

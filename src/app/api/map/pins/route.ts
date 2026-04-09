@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { redis } from "@/lib/redis";
-import crypto from "crypto";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   try {
@@ -31,99 +31,88 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Cache Redis
-    const cacheKey = `pins:${crypto
-      .createHash("md5")
-      .update(JSON.stringify({ bounds, transactionType, propertyType, priceMin, priceMax, wilayaCode, surfaceMin, surfaceMax, rooms }))
-      .digest("hex")}`;
+    // Construire les filtres Prisma
+    const where: Record<string, unknown> = {
+      status: "ACTIVE",
+      latitude: { not: null, gte: south, lte: north },
+      longitude: { not: null, gte: west, lte: east },
+    };
 
-    const cached = await redis.get(cacheKey);
-    if (cached) {
-      return NextResponse.json(cached);
+    if (transactionType) where.transactionType = transactionType;
+    if (propertyType) where.propertyType = propertyType;
+    if (wilayaCode) where.wilayaCode = Number(wilayaCode);
+    const quartier = searchParams.get("quartier");
+    if (quartier) where.quartierId = quartier;
+    if (rooms) where.rooms = { gte: Number(rooms) };
+
+    const bedrooms = searchParams.get("bedrooms");
+    const bathrooms = searchParams.get("bathrooms");
+    const floor = searchParams.get("floor");
+    const yearBuilt = searchParams.get("yearBuilt");
+    if (bedrooms) where.bedrooms = { gte: Number(bedrooms) };
+    if (bathrooms) where.bathrooms = { gte: Number(bathrooms) };
+    if (floor) where.floor = { gte: Number(floor) };
+    if (yearBuilt) where.yearBuilt = { gte: Number(yearBuilt) };
+
+    if (priceMin || priceMax) {
+      const priceFilter: Record<string, number> = {};
+      if (priceMin) priceFilter.gte = Number(priceMin);
+      if (priceMax) priceFilter.lte = Number(priceMax);
+      where.price = priceFilter;
     }
 
-    // Requête PostGIS
-    const conditions: string[] = [
-      `status = 'ACTIVE'`,
-      `ST_Within(location::geometry, ST_MakeEnvelope($1, $2, $3, $4, 4326))`,
+    if (surfaceMin || surfaceMax) {
+      const surfaceFilter: Record<string, number> = {};
+      if (surfaceMin) surfaceFilter.gte = Number(surfaceMin);
+      if (surfaceMax) surfaceFilter.lte = Number(surfaceMax);
+      where.surface = surfaceFilter;
+    }
+
+    // Boolean amenities
+    const booleanKeys = [
+      "hasElevator", "hasParking", "hasGarden", "hasPool", "isFurnished",
+      "hasStorefront", "hasWater", "hasElectricity", "hasGas", "hasFiber",
     ];
-    const params: (string | number)[] = [west, south, east, north];
-    let paramIndex = 5;
-
-    if (transactionType) {
-      conditions.push(`transaction_type = $${paramIndex++}`);
-      params.push(transactionType);
-    }
-    if (propertyType) {
-      conditions.push(`property_type = $${paramIndex++}`);
-      params.push(propertyType);
-    }
-    if (priceMin) {
-      conditions.push(`price >= $${paramIndex++}`);
-      params.push(Number(priceMin));
-    }
-    if (priceMax) {
-      conditions.push(`price <= $${paramIndex++}`);
-      params.push(Number(priceMax));
-    }
-    if (wilayaCode) {
-      conditions.push(`wilaya_code = $${paramIndex++}`);
-      params.push(Number(wilayaCode));
-    }
-    if (surfaceMin) {
-      conditions.push(`surface >= $${paramIndex++}`);
-      params.push(Number(surfaceMin));
-    }
-    if (surfaceMax) {
-      conditions.push(`surface <= $${paramIndex++}`);
-      params.push(Number(surfaceMax));
-    }
-    if (rooms) {
-      conditions.push(`rooms >= $${paramIndex++}`);
-      params.push(Number(rooms));
+    for (const key of booleanKeys) {
+      if (searchParams.get(key) === "true") where[key] = true;
     }
 
-    const pins: {
-      id: string;
-      title: string;
-      price: number;
-      transaction_type: string;
-      property_type: string;
-      lng: number;
-      lat: number;
-      thumbnail: string | null;
-    }[] = await db.$queryRawUnsafe(
-      `SELECT l.id, l.title, l.price, l.transaction_type, l.property_type,
-              ST_X(l.location::geometry) as lng,
-              ST_Y(l.location::geometry) as lat,
-              (SELECT url FROM listing_photos
-               WHERE listing_id = l.id ORDER BY "order" LIMIT 1) as thumbnail
-       FROM listings l
-       WHERE ${conditions.join(" AND ")}`,
-      ...params
-    );
+    const listings = await db.listing.findMany({
+      where,
+      select: {
+        id: true,
+        title: true,
+        price: true,
+        transactionType: true,
+        propertyType: true,
+        latitude: true,
+        longitude: true,
+        photos: {
+          select: { url: true },
+          orderBy: { order: "asc" },
+          take: 1,
+        },
+      },
+    });
 
     const geojson = {
       type: "FeatureCollection",
-      features: pins.map((pin) => ({
+      features: listings.map((l) => ({
         type: "Feature",
         geometry: {
           type: "Point",
-          coordinates: [pin.lng, pin.lat],
+          coordinates: [l.longitude, l.latitude],
         },
         properties: {
-          id: pin.id,
-          title: pin.title,
-          price: pin.price,
-          transactionType: pin.transaction_type,
-          propertyType: pin.property_type,
-          thumbnail: pin.thumbnail,
+          id: l.id,
+          title: l.title,
+          price: l.price,
+          transactionType: l.transactionType,
+          propertyType: l.propertyType,
+          thumbnail: l.photos[0]?.url ?? null,
         },
       })),
     };
-
-    // Cache 60s
-    await redis.set(cacheKey, JSON.stringify(geojson), { ex: 60 });
 
     return NextResponse.json(geojson);
   } catch (error) {

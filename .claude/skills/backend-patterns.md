@@ -212,7 +212,7 @@ const listing = await listingService.findById(id);
 ### Setup Test Database
 ```bash
 # .env.test
-DATABASE_URL="postgresql://user:password@localhost:5432/immodz_test"
+DATABASE_URL="postgresql://postgres:admin@localhost:5432/immodz_test"
 
 # package.json
 "test": "NODE_ENV=test jest --setupFilesAfterEnv ./jest.setup.ts"

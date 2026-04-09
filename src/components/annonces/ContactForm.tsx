@@ -7,9 +7,12 @@ interface ContactFormProps {
 }
 
 export default function ContactForm({ listingId }: ContactFormProps) {
-  const [message, setMessage] = useState("");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -19,7 +22,7 @@ export default function ContactForm({ listingId }: ContactFormProps) {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ listingId, message, phone }),
+        body: JSON.stringify({ listingId, name, email, message, phone }),
       });
 
       if (!res.ok) {
@@ -27,8 +30,12 @@ export default function ContactForm({ listingId }: ContactFormProps) {
         throw new Error(data.error || "Erreur lors de l'envoi");
       }
 
-      setMessage("");
+      setName("");
+      setEmail("");
       setPhone("");
+      setMessage("");
+      setSent(true);
+      setTimeout(() => setSent(false), 4000);
     } catch (err) {
       console.error(err);
     } finally {
@@ -37,41 +44,74 @@ export default function ContactForm({ listingId }: ContactFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4" id="contact">
+      {sent && (
+        <div className="bg-primary-fixed/30 text-primary rounded-lg p-3 text-sm font-medium text-center">
+          Message envoyé avec succès !
+        </div>
+      )}
       <div>
-        <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-semibold text-on-surface-variant mb-2">
+          Nom Complet
+        </label>
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Votre nom"
+          className="w-full bg-surface-container-low border-none rounded-lg p-3 text-on-surface focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-on-surface-variant/40"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-semibold text-on-surface-variant mb-2">
+          Email
+        </label>
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="votre@email.com"
+          className="w-full bg-surface-container-low border-none rounded-lg p-3 text-on-surface focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-on-surface-variant/40"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-semibold text-on-surface-variant mb-2">
           Téléphone
         </label>
         <input
-          id="phone"
           type="tel"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-          placeholder="0555 00 00 00"
+          placeholder="05XX XX XX XX"
+          className="w-full bg-surface-container-low border-none rounded-lg p-3 text-on-surface focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-on-surface-variant/40"
         />
       </div>
       <div>
-        <label htmlFor="message" className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-semibold text-on-surface-variant mb-2">
           Message
         </label>
         <textarea
-          id="message"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           required
-          rows={4}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+          rows={3}
           placeholder="Bonjour, je suis intéressé par ce bien..."
+          className="w-full bg-surface-container-low border-none rounded-lg p-3 text-on-surface focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-on-surface-variant/40 resize-none"
         />
       </div>
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full rounded-md bg-primary-600 px-4 py-2 text-white hover:bg-primary-700 disabled:opacity-50"
-      >
-        {loading ? "Envoi..." : "Envoyer le message"}
-      </button>
+      <div className="pt-2">
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-primary text-on-primary font-headline font-bold py-4 rounded-lg hover:bg-primary-container transition-all shadow-lg shadow-emerald-900/20 active:scale-[0.99] disabled:opacity-50"
+        >
+          {loading ? "Envoi..." : "Demander une visite"}
+        </button>
+      </div>
+      <p className="text-[10px] text-center text-on-surface-variant leading-relaxed">
+        En envoyant ce formulaire, vous acceptez nos conditions générales et
+        notre politique de confidentialité.
+      </p>
     </form>
   );
 }

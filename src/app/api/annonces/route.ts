@@ -15,7 +15,12 @@ export async function GET(request: NextRequest) {
     if (filters.transactionType) where.transactionType = filters.transactionType;
     if (filters.propertyType) where.propertyType = filters.propertyType;
     if (filters.wilayaCode) where.wilayaCode = filters.wilayaCode;
+    if (filters.quartier) where.quartierId = filters.quartier;
     if (filters.rooms) where.rooms = { gte: filters.rooms };
+    if (filters.bedrooms) where.bedrooms = { gte: filters.bedrooms };
+    if (filters.bathrooms) where.bathrooms = { gte: filters.bathrooms };
+    if (filters.floor != null) where.floor = { gte: filters.floor };
+    if (filters.yearBuilt) where.yearBuilt = { gte: filters.yearBuilt };
     if (filters.priceMin || filters.priceMax) {
       where.price = {
         ...(filters.priceMin ? { gte: filters.priceMin } : {}),
@@ -28,12 +33,21 @@ export async function GET(request: NextRequest) {
         ...(filters.surfaceMax ? { lte: filters.surfaceMax } : {}),
       };
     }
+    // Boolean amenities
+    const booleanKeys = [
+      "hasElevator", "hasParking", "hasGarden", "hasPool", "isFurnished",
+      "hasStorefront", "hasWater", "hasElectricity", "hasGas", "hasFiber",
+    ] as const;
+    for (const key of booleanKeys) {
+      if (filters[key] === true) where[key] = true;
+    }
 
     const [annonces, total] = await Promise.all([
       db.listing.findMany({
         where,
         include: {
           wilaya: true,
+        quartier: true,
           photos: { take: 1, orderBy: { order: "asc" } },
           user: { select: { name: true } },
         },
@@ -85,18 +99,12 @@ export async function POST(request: NextRequest) {
     const annonce = await db.listing.create({
       data: {
         ...listingData,
+        latitude: lat,
+        longitude: lng,
         userId: session.user.id,
-        status: "PENDING",
+        status: "ACTIVE",
       },
     });
-
-    // Si lat/lng fournis, mettre à jour la colonne PostGIS
-    if (lat !== undefined && lng !== undefined) {
-      await db.$executeRaw`
-        UPDATE listings SET location = ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography
-        WHERE id = ${annonce.id}
-      `;
-    }
 
     return NextResponse.json(annonce, { status: 201 });
   } catch (error) {

@@ -53,15 +53,12 @@ export async function PUT(
 
     const updated = await db.listing.update({
       where: { id: params.id },
-      data: listingData,
+      data: {
+        ...listingData,
+        latitude: lat,
+        longitude: lng,
+      },
     });
-
-    if (lat !== undefined && lng !== undefined) {
-      await db.$executeRaw`
-        UPDATE listings SET location = ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography
-        WHERE id = ${params.id}
-      `;
-    }
 
     return NextResponse.json(updated);
   } catch (error) {
@@ -92,7 +89,10 @@ export async function DELETE(
       return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
     }
 
-    await db.listing.delete({ where: { id: params.id } });
+    await db.listing.update({
+      where: { id: params.id },
+      data: { status: "ARCHIVED" },
+    });
 
     return NextResponse.json({ success: true });
   } catch {
