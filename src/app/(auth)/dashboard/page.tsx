@@ -102,10 +102,10 @@ export default async function DashboardPage() {
             ➕ Nouvelle annonce
           </Link>
           <Link
-            href="/recherche"
+            href={`/recherche?userId=${session.user.id}${user?.name ? `&agentName=${encodeURIComponent(user.name)}` : ""}`}
             className="rounded-2xl border-2 border-gray-200 bg-white text-primary-950 px-6 py-4 font-bold hover:border-primary-950 transition-all"
           >
-            🔍 Consulter les annonces
+            🗺️ Consulter mes annonces sur la carte
           </Link>
         </div>
 
