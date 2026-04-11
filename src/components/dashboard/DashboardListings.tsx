@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface Listing {
   id: string;
@@ -54,10 +55,13 @@ export default function DashboardListings({
   initialTotal,
   initialCursor,
 }: Props) {
+  const router = useRouter();
   const [listings, setListings] = useState(initialListings);
   const [total, setTotal] = useState(initialTotal);
   const [cursor, setCursor] = useState(initialCursor);
   const [loading, setLoading] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Filters
   const [status, setStatus] = useState("");
@@ -106,6 +110,21 @@ export default function DashboardListings({
 
   const loadMore = () => {
     if (cursor) fetchListings(true, cursor);
+  };
+
+  const handleDelete = async (id: string) => {
+    setDeletingId(id);
+    try {
+      const res = await fetch(`/api/annonces/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setListings((prev) => prev.filter((l) => l.id !== id));
+        setTotal((prev) => prev - 1);
+        router.refresh();
+      }
+    } finally {
+      setDeletingId(null);
+      setConfirmDeleteId(null);
+    }
   };
 
   return (
@@ -223,12 +242,15 @@ export default function DashboardListings({
       ) : (
         <div className="space-y-4">
           {listings.map((listing) => (
-            <Link
+            <div
               key={listing.id}
-              href={`/annonces/${listing.id}`}
-              className="block rounded-2xl border border-gray-100 bg-white p-4 hover:shadow-md transition-shadow"
+              className="rounded-2xl border border-gray-100 bg-white overflow-hidden hover:shadow-md transition-shadow"
             >
-              <div className="flex gap-4">
+              {/* Contenu cliquable */}
+              <Link
+                href={`/annonces/${listing.id}`}
+                className="flex gap-4 p-4 block"
+              >
                 <div className="w-24 h-24 rounded-lg bg-gray-100 flex-shrink-0 overflow-hidden">
                   {listing.photos.length > 0 ? (
                     <img
@@ -287,8 +309,51 @@ export default function DashboardListings({
                     </span>
                   </div>
                 </div>
+              </Link>
+
+              {/* Barre d'actions */}
+              <div className="flex items-center justify-end gap-2 px-4 py-2 border-t border-gray-50 bg-gray-50/50">
+                <Link
+                  href={`/annonces/${listing.id}/edit`}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                  </svg>
+                  Modifier
+                </Link>
+
+                {confirmDeleteId === listing.id ? (
+                  /* Confirmation inline */
+                  <div className="flex items-center gap-2 text-xs">
+                    <span className="text-gray-500 font-medium">Supprimer définitivement ?</span>
+                    <button
+                      onClick={() => handleDelete(listing.id)}
+                      disabled={deletingId === listing.id}
+                      className="px-3 py-1.5 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 disabled:opacity-50 transition-colors"
+                    >
+                      {deletingId === listing.id ? "..." : "Confirmer"}
+                    </button>
+                    <button
+                      onClick={() => setConfirmDeleteId(null)}
+                      className="px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100 font-semibold transition-colors"
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setConfirmDeleteId(listing.id)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    Supprimer
+                  </button>
+                )}
               </div>
-            </Link>
+            </div>
           ))}
         </div>
       )}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import MapView, { PinProperties } from "@/components/map/MapView";
 import AnnonceList from "@/components/annonces/AnnonceList";
 import SearchFilters from "@/components/ui/SearchFilters";
@@ -22,6 +23,22 @@ const propertyTypeLabels: Record<string, string> = {
 };
 
 export default function RechercheContent() {
+  const searchParams = useSearchParams();
+
+  // Filtre agent depuis l'URL (?userId=...&agentName=...)
+  const [agentFilter, setAgentFilter] = useState<{
+    userId: string;
+    name?: string;
+  } | null>(null);
+
+  useEffect(() => {
+    const userId = searchParams.get("userId");
+    const agentName = searchParams.get("agentName");
+    if (userId) {
+      setAgentFilter({ userId, name: agentName ?? undefined });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const [filters, setFilters] = useState<Record<string, string>>({
     transactionType: "RENT",
   });
@@ -131,14 +148,42 @@ export default function RechercheContent() {
 
       {/* ============ MAIN CONTENT AREA ============ */}
       <section className="flex-1 relative overflow-hidden">
-        {/* Map or List */}
-        {view === "map" ? (
-          <MapView filters={filters} onPinClick={handlePinClick} />
-        ) : (
-          <div className="h-full overflow-y-auto p-6 bg-surface-container-low">
-            <AnnonceList filters={filters} />
+        {/* Bannière filtre agent */}
+        {agentFilter && (
+          <div className="absolute top-20 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 bg-primary text-on-primary px-5 py-2.5 rounded-full shadow-xl text-sm font-semibold">
+            <span className="material-symbols-outlined text-base">person_pin_circle</span>
+            <span>
+              {agentFilter.name
+                ? `Annonces de ${agentFilter.name}`
+                : "Annonces de cet agent"}
+            </span>
+            <button
+              onClick={() => {
+                setAgentFilter(null);
+                // Nettoyer l'URL sans rechargement
+                window.history.replaceState({}, "", "/recherche");
+              }}
+              className="ml-1 w-5 h-5 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
+              aria-label="Supprimer le filtre agent"
+            >
+              <span className="material-symbols-outlined text-sm">close</span>
+            </button>
           </div>
         )}
+
+        {/* Map or List */}
+        {(() => {
+          const mergedFilters = agentFilter
+            ? { ...filters, userId: agentFilter.userId }
+            : filters;
+          return view === "map" ? (
+            <MapView filters={mergedFilters} onPinClick={handlePinClick} />
+          ) : (
+            <div className="h-full overflow-y-auto p-6 bg-surface-container-low">
+              <AnnonceList filters={mergedFilters} />
+            </div>
+          );
+        })()}
 
         {/* Floating View Toggle */}
         <div className="absolute top-6 left-1/2 -translate-x-1/2 z-30 bg-surface-container-lowest/80 backdrop-blur-md rounded-full p-1 shadow-2xl flex items-center gap-1">

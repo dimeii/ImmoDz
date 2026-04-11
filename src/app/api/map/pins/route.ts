@@ -38,6 +38,9 @@ export async function GET(request: NextRequest) {
       longitude: { not: null, gte: west, lte: east },
     };
 
+    const userId = searchParams.get("userId");
+    if (userId) where.userId = userId;
+
     if (transactionType) where.transactionType = transactionType;
     if (propertyType) where.propertyType = propertyType;
     if (wilayaCode) where.wilayaCode = Number(wilayaCode);

@@ -5,10 +5,28 @@ import { useRouter } from "next/navigation";
 import useSWR from "swr";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
+import PhotoUploadSection, { PhotoItem } from "./PhotoUploadSection";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
+
+// Limites géographiques de l'Algérie
+const ALGERIA_BOUNDS = {
+  minLat: 18.96,
+  maxLat: 37.1,
+  minLng: -8.67,
+  maxLng: 12.0,
+};
+
+function isInAlgeria(lat: number, lng: number): boolean {
+  return (
+    lat >= ALGERIA_BOUNDS.minLat &&
+    lat <= ALGERIA_BOUNDS.maxLat &&
+    lng >= ALGERIA_BOUNDS.minLng &&
+    lng <= ALGERIA_BOUNDS.maxLng
+  );
+}
 
 const propertyTypes = [
   { value: "APARTMENT", label: "Appartement" },
@@ -62,8 +80,12 @@ export default function ListingForm({ mode, listing }: ListingFormProps) {
   const wilayas: { code: number; name: string }[] = wilayasData ?? [];
 
   const [submitting, setSubmitting] = useState(false);
+  const [uploadStep, setUploadStep] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  // Photos
+  const [photos, setPhotos] = useState<PhotoItem[]>([]);
 
   // Form state
   const [title, setTitle] = useState(listing?.title ?? "");
@@ -119,15 +141,27 @@ export default function ListingForm({ mode, listing }: ListingFormProps) {
   const [lng, setLng] = useState<number | null>(listing?.longitude ?? null);
   const [geocoding, setGeocoding] = useState(false);
   const [geocodeError, setGeocodeError] = useState("");
+  const [locationWarning, setLocationWarning] = useState("");
 
   // Mini-carte
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markerRef = useRef<mapboxgl.Marker | null>(null);
 
+  const checkAlgeria = useCallback((pLat: number, pLng: number) => {
+    if (!isInAlgeria(pLat, pLng)) {
+      setLocationWarning(
+        "Ce point est en dehors de l'Algérie. Vérifiez la position du repère."
+      );
+    } else {
+      setLocationWarning("");
+    }
+  }, []);
+
   const updateMarker = useCallback((newLat: number, newLng: number) => {
     setLat(newLat);
     setLng(newLng);
+    checkAlgeria(newLat, newLng);
     if (markerRef.current) {
       markerRef.current.setLngLat([newLng, newLat]);
     } else if (mapRef.current) {
@@ -138,9 +172,10 @@ export default function ListingForm({ mode, listing }: ListingFormProps) {
         const pos = markerRef.current!.getLngLat();
         setLat(pos.lat);
         setLng(pos.lng);
+        checkAlgeria(pos.lat, pos.lng);
       });
     }
-  }, []);
+  }, [checkAlgeria]);
 
   // Initialiser la mini-carte
   useEffect(() => {
@@ -222,6 +257,15 @@ export default function ListingForm({ mode, listing }: ListingFormProps) {
     e.preventDefault();
     setError("");
     setFieldErrors({});
+
+    // Vérification géographique avant soumission
+    if (lat != null && lng != null && !isInAlgeria(lat, lng)) {
+      setError(
+        "Les coordonnées GPS saisies ne sont pas situées en Algérie. Repositionnez le repère sur la carte."
+      );
+      return;
+    }
+
     setSubmitting(true);
 
     const body: Record<string, unknown> = {
@@ -282,7 +326,53 @@ export default function ListingForm({ mode, listing }: ListingFormProps) {
         return;
       }
 
-      router.push(`/annonces/${data.id}`);
+      const listingId: string = data.id;
+
+      // Upload photos si présentes
+      if (photos.length > 0) {
+        setUploadStep(`Préparation des photos…`);
+
+        const sigRes = await fetch("/api/upload/signature", { method: "POST" });
+        if (!sigRes.ok) {
+          setError("Impossible d'obtenir la signature d'upload");
+          setSubmitting(false);
+          return;
+        }
+        const sig = await sigRes.json();
+
+        for (let i = 0; i < photos.length; i++) {
+          const photo = photos[i];
+          setUploadStep(`Upload photo ${i + 1}/${photos.length}…`);
+
+          const formData = new FormData();
+          formData.append("file", photo.file);
+          formData.append("api_key", sig.api_key);
+          formData.append("timestamp", sig.timestamp);
+          formData.append("signature", sig.signature);
+          formData.append("folder", sig.folder);
+
+          const cloudRes = await fetch(
+            `https://api.cloudinary.com/v1_1/${sig.cloud_name}/image/upload`,
+            { method: "POST", body: formData }
+          );
+          const cloudData = await cloudRes.json();
+
+          if (!cloudData.secure_url) continue;
+
+          await fetch(`/api/annonces/${listingId}/photos`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              url: cloudData.secure_url,
+              publicId: cloudData.public_id,
+              category: photo.category,
+              order: i,
+            }),
+          });
+        }
+      }
+
+      router.push(`/annonces/${listingId}`);
     } catch {
       setError("Erreur réseau");
       setSubmitting(false);
@@ -471,14 +561,22 @@ export default function ListingForm({ mode, listing }: ListingFormProps) {
             {geocodeError && (
               <p className="text-xs text-amber-600 mb-2">{geocodeError}</p>
             )}
-            {lat && lng && (
+            {lat && lng && !locationWarning && (
               <p className="text-xs text-green-700 mb-2">
                 Position : {lat.toFixed(5)}, {lng.toFixed(5)} — Déplacez le repère pour ajuster
               </p>
             )}
+            {locationWarning && (
+              <p className="text-xs text-red-600 mb-2 flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                </svg>
+                {locationWarning}
+              </p>
+            )}
             <div
               ref={mapContainerRef}
-              className="w-full h-64 rounded-lg border border-gray-300 overflow-hidden"
+              className={`w-full h-64 rounded-lg overflow-hidden border ${locationWarning ? "border-red-400" : "border-gray-300"}`}
             />
             <p className="text-xs text-gray-400 mt-1">
               Cliquez sur la carte ou utilisez le bouton &quot;Localiser&quot; pour positionner votre bien
@@ -661,12 +759,29 @@ export default function ListingForm({ mode, listing }: ListingFormProps) {
         </section>
       )}
 
+      {/* ─── Section Photos ─── */}
+      <section>
+        <h3 className="text-base font-bold text-primary-950 mb-1 border-b border-primary-100 pb-2">
+          Photos
+        </h3>
+        <p className="text-xs text-gray-500 mb-4">
+          Ajoutez des photos et précisez la pièce pour chacune (salon, chambre, cuisine…).
+          La première photo sera la photo principale.
+        </p>
+        <PhotoUploadSection
+          photos={photos}
+          onChange={setPhotos}
+          maxPhotos={10}
+        />
+      </section>
+
       {/* ─── Submit ─── */}
       <div className="flex gap-4 pt-4 border-t border-gray-200">
         <button
           type="button"
           onClick={() => router.back()}
-          className="px-6 py-3 rounded-lg border border-gray-300 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+          disabled={submitting}
+          className="px-6 py-3 rounded-lg border border-gray-300 text-sm font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition-colors"
         >
           Annuler
         </button>
@@ -676,7 +791,7 @@ export default function ListingForm({ mode, listing }: ListingFormProps) {
           className="flex-1 px-6 py-3 rounded-lg bg-primary-950 text-white text-sm font-semibold hover:bg-primary-900 transition-colors disabled:opacity-50"
         >
           {submitting
-            ? "Publication..."
+            ? (uploadStep ?? "Publication…")
             : mode === "create"
               ? "Publier l'annonce"
               : "Enregistrer les modifications"}

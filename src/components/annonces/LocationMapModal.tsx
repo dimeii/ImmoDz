@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
@@ -13,6 +14,11 @@ interface LocationMapModalProps {
   locationLabel: string;
   /** Static map image URL shown as the clickable trigger */
   staticMapUrl: string;
+  /**
+   * Si fourni, le clic sur la carte redirige vers cette URL
+   * au lieu d'ouvrir la modale de localisation.
+   */
+  redirectTo?: string;
 }
 
 export default function LocationMapModal({
@@ -21,7 +27,9 @@ export default function LocationMapModal({
   title,
   locationLabel,
   staticMapUrl,
+  redirectTo,
 }: LocationMapModalProps) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
@@ -84,12 +92,13 @@ export default function LocationMapModal({
     <>
       {/* Clickable static map trigger */}
       <section
-        onClick={() => setOpen(true)}
+        onClick={() => (redirectTo ? router.push(redirectTo) : setOpen(true))}
         className="rounded-2xl overflow-hidden editorial-shadow h-80 relative group cursor-pointer"
         role="button"
         tabIndex={0}
         onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") setOpen(true);
+          if (e.key === "Enter" || e.key === " ")
+            redirectTo ? router.push(redirectTo) : setOpen(true);
         }}
       >
         <img
@@ -110,8 +119,12 @@ export default function LocationMapModal({
         </div>
         {/* Hover hint */}
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-primary/80 text-white text-xs font-semibold px-4 py-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
-          <span className="material-symbols-outlined text-sm">open_in_full</span>
-          Ouvrir la carte interactive
+          <span className="material-symbols-outlined text-sm">
+            {redirectTo ? "person_pin_circle" : "open_in_full"}
+          </span>
+          {redirectTo
+            ? "Voir toutes les annonces de cet agent"
+            : "Ouvrir la carte interactive"}
         </div>
       </section>
 

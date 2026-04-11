@@ -43,7 +43,7 @@ export default async function AnnoncePage({
     include: {
       wilaya: true,
       photos: { orderBy: { order: "asc" } },
-      user: { select: { name: true, image: true } },
+      user: { select: { id: true, name: true, image: true } },
     },
   });
 
@@ -212,6 +212,7 @@ export default async function AnnoncePage({
             title={annonce.title}
             locationLabel={`${annonce.wilaya.name}${annonce.commune ? `, ${annonce.commune}` : ""}${annonce.address ? ` — ${annonce.address}` : ""}`}
             staticMapUrl={`https://api.mapbox.com/styles/v1/mapbox/light-v11/static/pin-s+003527(${annonce.longitude ?? 3.042},${annonce.latitude ?? 36.752})/${annonce.longitude ?? 3.042},${annonce.latitude ?? 36.752},13,0/800x400@2x?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`}
+            redirectTo={`/recherche?userId=${annonce.user.id}${annonce.user.name ? `&agentName=${encodeURIComponent(annonce.user.name)}` : ""}`}
           />
         </div>
 
