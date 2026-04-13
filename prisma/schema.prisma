@@ -187,6 +187,12 @@ model Listing {
   hasGas         Boolean @default(false) // Accès gaz
   hasFiber       Boolean @default(false) // Fibre optique
 
+  // Vente sur plan (avant construction)
+  surPlan Boolean @default(false)
+
+  // Contact direct pour cette annonce (numéro de l'agent)
+  contactPhone String?
+
   // Relations
   userId    String
   createdAt DateTime @default(now())

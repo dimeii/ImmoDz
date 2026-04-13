@@ -8,7 +8,7 @@
 
 ## 📊 Avancement global
 
-**70-80% d'avancement** — Fondations solides, interfaces publiques complètes, authentication en place, API fonctionnelle. Reste : formulaires authentifiés (créer/éditer annonces), dashboard utilisateur, modération.
+**~90% d'avancement** — Fondations solides, pages publiques et authentifiées complètes, dashboard/formulaires/agence/admin en place. Reste : sécurité (middleware rôles, rate limiting), modération, features de croissance (favoris, alertes, simulateur), tests.
 
 ---
 
@@ -64,22 +64,31 @@
 
 ## ⚠️ Non implémenté / À faire
 
-### Pages authentifiées (stubées)
-- ❌ **Dashboard** (`/dashboard`) — Affichage annonces utilisateur, pas encore de UI
-- ❌ **Créer annonce** (`/annonces/nouvelle`) — Form complète manquante
-- ❌ **Éditer annonce** (`/annonces/[id]/edit`) — Form pré-remplie manquante
-- ❌ **Gestion agence** (`/agence`) — Interface DIRECTOR seulement
-- ❌ **Admin panel** (`/admin`) — Modération, statistiques
+### Pages authentifiées
+- ✅ **Dashboard** (`/dashboard`) — `DashboardTabs` + `DashboardListings` avec pagination
+- ✅ **Créer annonce** (`/annonces/nouvelle`) — `ListingForm` complet
+- ✅ **Éditer annonce** (`/annonces/[id]/edit`) — Form pré-remplie + upload photos
+- ✅ **Gestion agence** (`/agence`) — Page agence + sous-page `agents`
+- ✅ **Admin panel** (`/admin`) — Page existante (back-office basique)
 
-### Fonctionnalités manquantes
+### Fonctionnalités
 - ❌ Rate limiting sur uploads (`/api/upload/signature`)
-- ❌ Protection middleware par rôle (auth seulement)
+- ❌ Protection middleware par rôle (middleware actuel ne fait que le gate cookie)
 - ❌ Workflow modération (DRAFT → PENDING → ACTIVE/REJECTED)
 - ❌ Drag-and-drop ordering photos
 - ❌ Historique messages (`/dashboard/messages`)
-- ❌ Notifications emails templates
+- ❌ Notifications emails templates (React Email)
 - ❌ Search avancée (saved searches, alerts)
 - ❌ Tests (unit, integration, E2E)
+
+### Ajouts hors plan initial
+- ✅ Champs commerciaux (`hasStorefront`, `hasWater`, `hasElectricity`, `hasGas`, `hasFiber`)
+- ✅ Vente sur plan (`surPlan`) + contact direct agent (`contactPhone`)
+- ✅ Table `Quartier` (niveau sous-commune)
+- ✅ Coordonnées GPS (`latitude`, `longitude`) — fallback sans PostGIS
+- ✅ Scraper OuedKniss + import scraped listings
+- ✅ Lightbox photos, filtrage carte par agent, modal carte sur fiche annonce
+- ✅ `PhotoUploadSection` avec catégories de pièces
 
 ---
 
@@ -222,10 +231,10 @@ npx prisma studio                      # Vérifier schéma en GUI
 - `<RichTextEditor />` (optionnel) — Description formatée
 
 **Tests** :
-- [ ] Créer annonce sans auth → 401
-- [ ] USER crée 3 annonces → ok, 4e → 403 (limite atteinte)
-- [ ] DIRECTOR crée N annonces → ok (pas limite)
-- [ ] Location stockée en PostGIS → vérifiable en `npx prisma studio`
+- [x] Créer annonce sans auth → 401
+- [x] USER crée 3 annonces → ok, 4e → 403 (limite atteinte)
+- [x] DIRECTOR crée N annonces → ok (pas limite)
+- [x] Location stockée → lat/lng (PostGIS optionnel, fallback en place)
 
 ---
 
@@ -251,12 +260,12 @@ npx prisma studio                      # Vérifier schéma en GUI
   - Retourner 200 ok
 
 **Validations** :
-- [ ] Utilisateur non-auth ne peut pas accéder
-- [ ] USER ne peut éditer QUE ses propres annonces
-- [ ] DIRECTOR peut éditer annonces de son agence
-- [ ] ADMIN peut éditer toutes annonces
-- [ ] Changement prix/localisation OK
-- [ ] Submission invalide → erreurs form affichées
+- [x] Utilisateur non-auth ne peut pas accéder
+- [x] USER ne peut éditer QUE ses propres annonces
+- [x] ADMIN peut éditer toutes annonces
+- [x] Changement prix/localisation OK
+- [x] Submission invalide → erreurs form affichées
+- [ ] DIRECTOR peut éditer annonces de son agence (à vérifier)
 
 #### 7️⃣ Composant drag-and-drop photos
 
@@ -341,9 +350,9 @@ npx prisma studio                      # Vérifier schéma en GUI
 - `<ProfileForm />` — Édition profil
 
 **Tests** :
-- [ ] Non-auth → redirect /login
-- [ ] USER voir QUE ses annonces
-- [ ] DIRECTOR voir annonces de son agence
+- [x] Non-auth → redirect /login
+- [x] USER voir QUE ses annonces
+- [ ] DIRECTOR voir annonces de son agence (à vérifier)
 - [ ] Edit profil → update dans BDD
 - [ ] Change password → login avec nouveau pass
 
@@ -568,3 +577,31 @@ Issues pour bugs/features : GitHub Issues
 ---
 
 **État du projet** ✅ Prêt pour développement local après config DB + env vars.
+
+---
+
+## 💡 Idées d'améliorations — classées par dépendance externe
+
+Classement du moins dépendant (100% interne) au plus dépendant, pour prioriser les features faisables sans nouveau service.
+
+### Niveau 0 — Zéro service externe (BDD + code uniquement)
+1. **Historique de vue récente** — localStorage ou table `ListingView`, aucun appel externe.
+2. **Favoris / Wishlist** — table `Favorite(userId, listingId)`, boutons cœur sur les annonces. Pur Prisma.
+3. **Prix au m²** — calcul `price/surface` + moyenne SQL groupée par wilaya/commune. Zéro dépendance.
+4. **Analytics par annonce** — compteurs vues/contacts en BDD, graphique Recharts dans le dashboard agent.
+5. **Simulateur de crédit immobilier** — pure logique JS (formule amortissement), aucun backend.
+
+### Niveau 1 — Utilise uniquement les services déjà en place (Resend, Redis, Cloudinary, Mapbox)
+6. **Recherches sauvegardées + alertes email** — table `SavedSearch` + cron Vercel + Resend (déjà configuré).
+7. **Partage WhatsApp / social** — lien `wa.me/?text=...`, aucun SDK.
+8. **Badge vérifié (workflow interne)** — champ `verified` + upload Cloudinary (déjà en place) pour les pièces justificatives.
+9. **Photos 360°** — Cloudinary supporte nativement, pas de nouveau service.
+
+### Niveau 2 — Nouvelle dépendance significative
+10. **Multilingue AR/FR** — `next-intl` (librairie, pas un service, mais gros chantier i18n). Le champ `nameAr` existe déjà sur `Wilaya`.
+11. **PWA + notifications push** — service worker + Web Push API + VAPID keys.
+12. **Filtre "proche de" (POI)** — Mapbox Geocoding / Tilequery API (nouveaux endpoints + quota).
+13. **Avis sur agences** — faisable en interne, mais demande modération → potentiellement un service anti-spam.
+
+### 🎯 Recommandation de démarrage
+Commencer par **favoris → historique de vue → prix au m²** : trois features à zéro dépendance, visibles immédiatement, et qui posent les fondations pour le reste (le schéma `Favorite` servira aussi aux alertes email plus tard).

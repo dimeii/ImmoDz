@@ -120,10 +120,20 @@ export default async function AnnoncePage({
           <section className="mb-10">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-outline-variant/15 pb-8">
               <div>
-                <p className="text-primary font-headline font-bold tracking-widest text-xs uppercase mb-2">
-                  {PROPERTY_TYPE_LABELS[annonce.propertyType] ??
-                    annonce.propertyType}
-                </p>
+                <div className="flex items-center gap-3 mb-2">
+                  <p className="text-primary font-headline font-bold tracking-widest text-xs uppercase">
+                    {PROPERTY_TYPE_LABELS[annonce.propertyType] ??
+                      annonce.propertyType}
+                  </p>
+                  {annonce.surPlan && (
+                    <span className="inline-flex items-center gap-1 bg-primary-container text-on-primary-container px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
+                      <span className="material-symbols-outlined text-sm">
+                        architecture
+                      </span>
+                      Sur plan
+                    </span>
+                  )}
+                </div>
                 <h1 className="text-4xl md:text-5xl font-headline font-extrabold text-primary tracking-tighter mb-2">
                   {annonce.title}
                 </h1>
@@ -241,13 +251,24 @@ export default async function AnnoncePage({
                   </span>
                 )}
               </div>
-              <div>
+              <div className="flex-1 min-w-0">
                 <div className="text-primary font-headline font-bold text-lg leading-tight">
                   {annonce.user.name}
                 </div>
                 <div className="text-on-surface-variant text-sm font-medium">
                   Annonceur
                 </div>
+                {annonce.contactPhone && (
+                  <a
+                    href={`tel:${annonce.contactPhone}`}
+                    className="mt-2 inline-flex items-center gap-2 text-primary font-semibold text-sm hover:underline underline-offset-4"
+                  >
+                    <span className="material-symbols-outlined text-base">
+                      call
+                    </span>
+                    {annonce.contactPhone}
+                  </a>
+                )}
               </div>
             </div>
 
