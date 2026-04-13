@@ -111,6 +111,7 @@ model User {
   agencyMembers    AgencyMember[]
   contactsSent     ContactRequest[] @relation("ContactSender")
   contactsReceived ContactRequest[] @relation("ContactReceiver")
+  favorites        Favorite[]
 
   @@map("users")
 }
@@ -187,6 +188,16 @@ model Listing {
   hasGas         Boolean @default(false) // Accès gaz
   hasFiber       Boolean @default(false) // Fibre optique
 
+  // Vente sur plan (avant construction)
+  surPlan Boolean @default(false)
+
+  // Contact direct pour cette annonce (numéro de l'agent)
+  contactPhone String?
+
+  // Compteurs
+  viewCount    Int @default(0)
+  contactCount Int @default(0)
+
   // Relations
   userId    String
   createdAt DateTime @default(now())
@@ -204,12 +215,28 @@ model Listing {
   quartier        Quartier?        @relation(fields: [quartierId], references: [id])
   photos          ListingPhoto[]
   contactRequests ContactRequest[]
+  favorites       Favorite[]
 
   @@index([status, transactionType, propertyType])
   @@index([wilayaCode])
   @@index([quartierId])
   @@index([price])
   @@map("listings")
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  listingId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, listingId])
+  @@index([userId])
+  @@index([listingId])
+  @@map("favorites")
 }
 
 model ListingPhoto {

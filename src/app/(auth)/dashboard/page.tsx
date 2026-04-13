@@ -107,6 +107,12 @@ export default async function DashboardPage() {
           >
             🗺️ Consulter mes annonces sur la carte
           </Link>
+          <Link
+            href="/dashboard/favoris"
+            className="rounded-2xl border-2 border-gray-200 bg-white text-primary-950 px-6 py-4 font-bold hover:border-primary-950 transition-all sm:col-span-2"
+          >
+            ❤️ Mes favoris
+          </Link>
         </div>
 
         {/* Annonces */}

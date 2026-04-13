@@ -21,7 +21,7 @@ const config: Config = {
           700: "#137a50",
           800: "#0d6a40",
           900: "#065a31",
-          950: "#007b30",
+          950: "#064e3b",
           DEFAULT: "#003527",
         },
         // Material Design 3 inspired tokens

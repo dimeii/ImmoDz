@@ -69,6 +69,8 @@ interface ListingFormProps {
     hasElectricity: boolean;
     hasGas: boolean;
     hasFiber: boolean;
+    surPlan: boolean;
+    contactPhone?: string | null;
     latitude?: number | null;
     longitude?: number | null;
   };
@@ -135,6 +137,10 @@ export default function ListingForm({ mode, listing }: ListingFormProps) {
   );
   const [hasGas, setHasGas] = useState(listing?.hasGas ?? false);
   const [hasFiber, setHasFiber] = useState(listing?.hasFiber ?? false);
+  const [surPlan, setSurPlan] = useState(listing?.surPlan ?? false);
+  const [contactPhone, setContactPhone] = useState(
+    listing?.contactPhone ?? ""
+  );
 
   // Géolocalisation
   const [lat, setLat] = useState<number | null>(listing?.latitude ?? null);
@@ -165,7 +171,7 @@ export default function ListingForm({ mode, listing }: ListingFormProps) {
     if (markerRef.current) {
       markerRef.current.setLngLat([newLng, newLat]);
     } else if (mapRef.current) {
-      markerRef.current = new mapboxgl.Marker({ color: "#007b30", draggable: true })
+      markerRef.current = new mapboxgl.Marker({ color: "#064e3b", draggable: true })
         .setLngLat([newLng, newLat])
         .addTo(mapRef.current);
       markerRef.current.on("dragend", () => {
@@ -285,12 +291,14 @@ export default function ListingForm({ mode, listing }: ListingFormProps) {
       hasElectricity,
       hasGas,
       hasFiber,
+      surPlan,
     };
 
     if (lat != null) body.lat = lat;
     if (lng != null) body.lng = lng;
     if (commune) body.commune = commune;
     if (address) body.address = address;
+    if (contactPhone.trim()) body.contactPhone = contactPhone.trim();
     if (surface) body.surface = Number(surface);
     if (rooms) body.rooms = Number(rooms);
     if (bedrooms) body.bedrooms = Number(bedrooms);
@@ -688,6 +696,7 @@ export default function ListingForm({ mode, listing }: ListingFormProps) {
             { label: "Piscine", checked: hasPool, onChange: setHasPool },
             { label: "Meublé", checked: isFurnished, onChange: setIsFurnished },
             { label: "Fibre optique", checked: hasFiber, onChange: setHasFiber },
+            { label: "Vente sur plan", checked: surPlan, onChange: setSurPlan },
           ].map((item) => (
             <label
               key={item.label}
@@ -758,6 +767,31 @@ export default function ListingForm({ mode, listing }: ListingFormProps) {
           </div>
         </section>
       )}
+
+      {/* ─── Section Contact ─── */}
+      <section>
+        <h3 className="text-base font-bold text-primary-950 mb-4 border-b border-primary-100 pb-2">
+          Contact
+        </h3>
+        <div>
+          <label className={labelClass}>Téléphone de contact</label>
+          <input
+            type="tel"
+            value={contactPhone}
+            onChange={(e) => setContactPhone(e.target.value)}
+            placeholder="Ex: 0550 12 34 56"
+            className={inputClass}
+          />
+          <p className="text-xs text-gray-400 mt-1">
+            Numéro affiché sur l&apos;annonce pour que les acheteurs vous
+            joignent directement. Laissez vide pour utiliser uniquement le
+            formulaire de contact.
+          </p>
+          {fieldErrors.contactPhone && (
+            <p className={errorClass}>{fieldErrors.contactPhone}</p>
+          )}
+        </div>
+      </section>
 
       {/* ─── Section Photos ─── */}
       <section>

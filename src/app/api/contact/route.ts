@@ -39,16 +39,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Annonce introuvable" }, { status: 404 });
     }
 
-    // Enregistrer en BDD
-    await db.contactRequest.create({
-      data: {
-        listingId: validated.listingId,
-        senderId: session.user.id,
-        receiverId: listing.userId,
-        message: validated.message,
-        phone: validated.phone,
-      },
-    });
+    // Enregistrer en BDD + incrémenter compteur
+    await db.$transaction([
+      db.contactRequest.create({
+        data: {
+          listingId: validated.listingId,
+          senderId: session.user.id,
+          receiverId: listing.userId,
+          message: validated.message,
+          phone: validated.phone,
+        },
+      }),
+      db.listing.update({
+        where: { id: validated.listingId },
+        data: { contactCount: { increment: 1 } },
+      }),
+    ]);
 
     // Envoyer email au propriétaire
     if (listing.user.email) {

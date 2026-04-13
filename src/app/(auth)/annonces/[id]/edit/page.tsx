@@ -76,6 +76,8 @@ export default function EditAnnoncePage() {
           hasElectricity: listing.hasElectricity,
           hasGas: listing.hasGas,
           hasFiber: listing.hasFiber,
+          surPlan: listing.surPlan ?? false,
+          contactPhone: listing.contactPhone,
           latitude: listing.latitude,
           longitude: listing.longitude,
         }}

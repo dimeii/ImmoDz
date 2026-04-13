@@ -275,7 +275,7 @@ export default function RechercheContent() {
                           <Link
                             href={`/annonces/${listing.id}`}
                             target="_blank"
-                            className="text-xl font-bold font-headline text-on-surface tracking-tight leading-tight hover:text-primary transition-colors"
+                            className="text-xl font-bold font-headline text-on-surface tracking-tight leading-tight hover:text-primary hover:underline underline-offset-4 decoration-2 transition-colors"
                           >
                             {listing.title}
                           </Link>

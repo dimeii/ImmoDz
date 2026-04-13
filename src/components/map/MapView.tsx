@@ -87,6 +87,19 @@ type GeoPoint = GeoJSON.Feature<GeoJSON.Point, PinProperties>;
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
+function formatMapPrice(price: number): string {
+  let short: string;
+  if (price >= 1_000_000) {
+    const m = price / 1_000_000;
+    short = m % 1 === 0 ? `${m}M` : `${m.toFixed(1)}M`;
+  } else if (price >= 1_000) {
+    short = `${Math.round(price / 1_000)}K`;
+  } else {
+    short = `${price}`;
+  }
+  return `${short} DA`;
+}
+
 interface MapViewProps {
   filters?: Record<string, string>;
   onBoundsChange?: (bounds: [number, number, number, number]) => void;
@@ -215,7 +228,7 @@ export default function MapView({
         el.style.width = `${size}px`;
         el.style.height = `${size}px`;
         el.style.borderRadius = "50%";
-        el.style.background = "#007B30";
+        el.style.background = "#064E3B";
         el.style.border = "3px solid white";
         el.style.color = "white";
         el.style.display = "flex";
@@ -240,32 +253,44 @@ export default function MapView({
           onPinClick?.(listings);
         });
       } else {
-        // Single pin — petit cercle vert avec wrapper pour le hover
+        // Single pin — pastille avec prix affiché.
+        // IMPORTANT: Mapbox écrit sur `el.style.transform` pour positionner
+        // le marker. On ne doit donc PAS toucher transform/top/left sur `el`.
+        // Les styles visuels vont sur un enfant `pill`.
         const isSale = props.transactionType === "SALE";
-        el.style.width = "24px";
-        el.style.height = "24px";
-        el.style.display = "flex";
-        el.style.alignItems = "center";
-        el.style.justifyContent = "center";
+        const priceLabel = formatMapPrice(props.price as number);
+
         el.style.cursor = "pointer";
 
-        const dot = document.createElement("div");
-        dot.style.width = "16px";
-        dot.style.height = "16px";
-        dot.style.borderRadius = "50%";
-        dot.style.background = isSale ? "#C9082A" : "#007B30";
-        dot.style.border = "3px solid white";
-        dot.style.boxShadow = "0 2px 6px rgba(0,0,0,0.3)";
-        dot.style.transition = "width 150ms, height 150ms";
-        el.appendChild(dot);
+        const pill = document.createElement("div");
+        pill.style.display = "inline-flex";
+        pill.style.alignItems = "center";
+        pill.style.justifyContent = "center";
+        pill.style.padding = "5px 10px";
+        pill.style.borderRadius = "9999px";
+        pill.style.background = isSale ? "#C9082A" : "#064E3B";
+        pill.style.color = "white";
+        pill.style.border = "2px solid white";
+        pill.style.boxShadow = "0 2px 8px rgba(0,0,0,0.25)";
+        pill.style.fontSize = "12px";
+        pill.style.fontWeight = "700";
+        pill.style.fontFamily =
+          "system-ui, -apple-system, Segoe UI, sans-serif";
+        pill.style.whiteSpace = "nowrap";
+        pill.style.transition = "transform 150ms, box-shadow 150ms";
+        pill.style.transformOrigin = "center";
+        pill.textContent = priceLabel;
+        el.appendChild(pill);
 
         el.addEventListener("mouseenter", () => {
-          dot.style.width = "22px";
-          dot.style.height = "22px";
+          pill.style.transform = "scale(1.08)";
+          pill.style.boxShadow = "0 4px 12px rgba(0,0,0,0.35)";
+          el.style.zIndex = "10";
         });
         el.addEventListener("mouseleave", () => {
-          dot.style.width = "16px";
-          dot.style.height = "16px";
+          pill.style.transform = "scale(1)";
+          pill.style.boxShadow = "0 2px 8px rgba(0,0,0,0.25)";
+          el.style.zIndex = "";
         });
 
         el.addEventListener("click", () => {

@@ -37,6 +37,14 @@ export const createListingSchema = z.object({
   hasElectricity: z.boolean().optional(),
   hasGas: z.boolean().optional(),
   hasFiber: z.boolean().optional(),
+  surPlan: z.boolean().optional(),
+  contactPhone: z
+    .string()
+    .trim()
+    .min(6)
+    .max(20)
+    .optional()
+    .or(z.literal("")),
   lat: z.number().min(-90).max(90).optional(),
   lng: z.number().min(-180).max(180).optional(),
 });

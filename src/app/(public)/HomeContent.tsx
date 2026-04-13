@@ -82,16 +82,35 @@ const FEATURED_LISTINGS = [
   },
 ];
 
+const PROPERTY_TYPES = [
+  { value: "", label: "Tout type de bien" },
+  { value: "APARTMENT", label: "Appartement" },
+  { value: "HOUSE", label: "Maison" },
+  { value: "VILLA", label: "Villa" },
+  { value: "STUDIO", label: "Studio" },
+  { value: "LAND", label: "Terrain" },
+  { value: "COMMERCIAL", label: "Commercial" },
+  { value: "OFFICE", label: "Bureau" },
+];
+
+const ROOMS_OPTIONS = ["1", "2", "3", "4", "5"];
+
 export default function HomeContent() {
   const { data: session } = useSession();
   const router = useRouter();
   const [searchTransaction, setSearchTransaction] = useState<"RENT" | "SALE">("RENT");
   const [searchWilaya, setSearchWilaya] = useState("");
+  const [searchPropertyType, setSearchPropertyType] = useState("");
+  const [searchPriceMax, setSearchPriceMax] = useState("");
+  const [searchRooms, setSearchRooms] = useState("");
 
   const handleSearch = () => {
     const params = new URLSearchParams();
     params.set("transactionType", searchTransaction);
     if (searchWilaya) params.set("wilayaCode", searchWilaya);
+    if (searchPropertyType) params.set("propertyType", searchPropertyType);
+    if (searchPriceMax) params.set("priceMax", searchPriceMax);
+    if (searchRooms) params.set("rooms", searchRooms);
     router.push(`/recherche?${params.toString()}`);
   };
 
@@ -116,9 +135,10 @@ export default function HomeContent() {
 
           {/* Search Box */}
           <div className="bg-surface-container-lowest/90 backdrop-blur-xl p-2 md:p-4 rounded-xl editorial-shadow max-w-4xl mx-auto text-on-surface">
-            <div className="flex flex-col md:flex-row gap-4">
+            {/* Row 1 — Transaction + Wilaya + Bouton */}
+            <div className="flex flex-col md:flex-row gap-3">
               {/* Toggle Location/Vente */}
-              <div className="flex bg-surface-container-low rounded-lg p-1 w-full md:w-auto">
+              <div className="flex bg-surface-container-low rounded-lg p-1 w-full md:w-auto shrink-0">
                 <button
                   onClick={() => setSearchTransaction("RENT")}
                   className={`flex-1 px-6 py-2 rounded-md font-headline text-sm font-bold transition-all ${
@@ -143,15 +163,15 @@ export default function HomeContent() {
 
               {/* Wilaya Select */}
               <div className="flex-1 relative flex items-center bg-surface-container-low rounded-lg px-4">
-                <span className="material-symbols-outlined text-primary mr-3">
+                <span className="material-symbols-outlined text-primary mr-3 text-[20px]">
                   location_on
                 </span>
                 <select
                   value={searchWilaya}
                   onChange={(e) => setSearchWilaya(e.target.value)}
-                  className="w-full bg-transparent border-none focus:ring-0 text-on-surface font-medium appearance-none py-3"
+                  className="w-full bg-transparent border-none focus:ring-0 text-on-surface font-medium appearance-none py-3 text-sm"
                 >
-                  <option value="">Toute l&apos;Algerie (Wilaya)</option>
+                  <option value="">Toute l&apos;Algerie</option>
                   {WILAYAS.map((w) => (
                     <option key={w.code} value={w.code}>
                       {w.name}
@@ -163,11 +183,66 @@ export default function HomeContent() {
               {/* Search Button */}
               <button
                 onClick={handleSearch}
-                className="bg-primary text-white px-10 py-4 rounded-lg font-headline font-bold flex items-center justify-center gap-2 hover:bg-primary-container transition-all"
+                className="bg-primary text-white px-8 py-3.5 rounded-lg font-headline font-bold flex items-center justify-center gap-2 hover:bg-primary-container transition-all shrink-0"
               >
-                <span className="material-symbols-outlined">search</span>
+                <span className="material-symbols-outlined text-[18px]">search</span>
                 Rechercher
               </button>
+            </div>
+
+            {/* Row 2 — Filtres avancés */}
+            <div className="flex flex-col md:flex-row gap-3 mt-2 pt-2 border-t border-outline-variant/20">
+              {/* Type de bien */}
+              <div className="flex-1 flex items-center bg-surface-container-low rounded-lg px-4">
+                <span className="material-symbols-outlined text-on-surface-variant mr-3 text-[18px]">
+                  home_work
+                </span>
+                <select
+                  value={searchPropertyType}
+                  onChange={(e) => setSearchPropertyType(e.target.value)}
+                  className="w-full bg-transparent border-none focus:ring-0 text-on-surface appearance-none py-2.5 text-sm"
+                >
+                  {PROPERTY_TYPES.map((t) => (
+                    <option key={t.value} value={t.value}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Budget max */}
+              <div className="flex items-center bg-surface-container-low rounded-lg px-4 gap-2 min-w-[160px]">
+                <span className="material-symbols-outlined text-on-surface-variant text-[18px]">
+                  payments
+                </span>
+                <input
+                  type="number"
+                  placeholder={`Budget max (DA${searchTransaction === "RENT" ? "/mois" : ""})`}
+                  value={searchPriceMax}
+                  onChange={(e) => setSearchPriceMax(e.target.value)}
+                  className="w-full bg-transparent border-none focus:ring-0 text-on-surface py-2.5 text-sm placeholder:text-on-surface-variant/50"
+                />
+              </div>
+
+              {/* Pièces */}
+              <div className="flex items-center gap-2 bg-surface-container-low rounded-lg px-4 py-2">
+                <span className="material-symbols-outlined text-on-surface-variant text-[18px] mr-1">
+                  door_open
+                </span>
+                {ROOMS_OPTIONS.map((r) => (
+                  <button
+                    key={r}
+                    onClick={() => setSearchRooms(searchRooms === r ? "" : r)}
+                    className={`w-8 h-8 rounded-md text-xs font-bold transition-all ${
+                      searchRooms === r
+                        ? "bg-primary text-on-primary"
+                        : "text-on-surface-variant hover:bg-surface-container-high"
+                    }`}
+                  >
+                    {r}+
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -246,7 +321,7 @@ export default function HomeContent() {
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between items-start">
-                    <h3 className="text-xl font-headline font-extrabold">
+                    <h3 className="text-xl font-headline font-extrabold hover:underline underline-offset-4 decoration-2">
                       {listing.title}
                     </h3>
                     <span className="text-primary font-bold text-lg">

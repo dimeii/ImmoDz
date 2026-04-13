@@ -3,6 +3,9 @@ import { notFound } from "next/navigation";
 import PhotoGallery from "@/components/annonces/PhotoGallery";
 import ContactForm from "@/components/annonces/ContactForm";
 import LocationMapModal from "@/components/annonces/LocationMapModal";
+import ShareButtons from "@/components/annonces/ShareButtons";
+import FavoriteButton from "@/components/annonces/FavoriteButton";
+import ViewTracker from "@/components/annonces/ViewTracker";
 
 const PROPERTY_TYPE_LABELS: Record<string, string> = {
   APARTMENT: "Appartement",
@@ -102,6 +105,7 @@ export default async function AnnoncePage({
 
   return (
     <main className="pb-12 max-w-screen-2xl mx-auto px-6 md:px-12 pt-8">
+      <ViewTracker listingId={annonce.id} />
       <div className="flex flex-col lg:flex-row gap-12">
         {/* ============ MAIN CONTENT (2/3) ============ */}
         <div className="w-full lg:w-2/3">
@@ -120,10 +124,20 @@ export default async function AnnoncePage({
           <section className="mb-10">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-outline-variant/15 pb-8">
               <div>
-                <p className="text-primary font-headline font-bold tracking-widest text-xs uppercase mb-2">
-                  {PROPERTY_TYPE_LABELS[annonce.propertyType] ??
-                    annonce.propertyType}
-                </p>
+                <div className="flex items-center gap-3 mb-2">
+                  <p className="text-primary font-headline font-bold tracking-widest text-xs uppercase">
+                    {PROPERTY_TYPE_LABELS[annonce.propertyType] ??
+                      annonce.propertyType}
+                  </p>
+                  {annonce.surPlan && (
+                    <span className="inline-flex items-center gap-1 bg-primary-container text-on-primary-container px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
+                      <span className="material-symbols-outlined text-sm">
+                        architecture
+                      </span>
+                      Sur plan
+                    </span>
+                  )}
+                </div>
                 <h1 className="text-4xl md:text-5xl font-headline font-extrabold text-primary tracking-tighter mb-2">
                   {annonce.title}
                 </h1>
@@ -148,6 +162,14 @@ export default async function AnnoncePage({
                     : "Prix de vente"}
                 </div>
               </div>
+            </div>
+            <div className="mt-6 flex flex-wrap items-center gap-2">
+              <FavoriteButton listingId={annonce.id} variant="detail" />
+              <ShareButtons
+                title={annonce.title}
+                price={annonce.price}
+                transactionType={annonce.transactionType}
+              />
             </div>
           </section>
 
@@ -241,13 +263,24 @@ export default async function AnnoncePage({
                   </span>
                 )}
               </div>
-              <div>
+              <div className="flex-1 min-w-0">
                 <div className="text-primary font-headline font-bold text-lg leading-tight">
                   {annonce.user.name}
                 </div>
                 <div className="text-on-surface-variant text-sm font-medium">
                   Annonceur
                 </div>
+                {annonce.contactPhone && (
+                  <a
+                    href={`tel:${annonce.contactPhone}`}
+                    className="mt-2 inline-flex items-center gap-2 text-primary font-semibold text-sm hover:underline underline-offset-4"
+                  >
+                    <span className="material-symbols-outlined text-base">
+                      call
+                    </span>
+                    {annonce.contactPhone}
+                  </a>
+                )}
               </div>
             </div>
 

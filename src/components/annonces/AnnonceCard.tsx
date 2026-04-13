@@ -1,3 +1,5 @@
+import FavoriteButton from "@/components/annonces/FavoriteButton";
+
 interface AnnonceCardProps {
   id: string;
   title: string;
@@ -11,6 +13,7 @@ interface AnnonceCardProps {
 }
 
 export default function AnnonceCard({
+  id,
   title,
   price,
   transactionType,
@@ -26,12 +29,13 @@ export default function AnnonceCard({
         {thumbnail && (
           <img src={thumbnail} alt={title} className="h-full w-full object-cover" />
         )}
+        <FavoriteButton listingId={id} variant="card" />
         <div className="absolute top-2 right-2 bg-primary-950 text-white px-2 py-1 rounded text-xs font-bold">
           {transactionType === "RENT" ? "Location" : "Vente"}
         </div>
       </div>
       <div className="p-4">
-        <h3 className="font-semibold text-gray-900 line-clamp-2 mb-2">{title}</h3>
+        <h3 className="font-semibold text-gray-900 line-clamp-2 mb-2 hover:underline underline-offset-4 decoration-2">{title}</h3>
         <p className="text-xl font-bold text-primary-950">
           {price.toLocaleString("fr-DZ")} DA
           {transactionType === "RENT" && <span className="text-sm font-normal text-gray-500"> / mois</span>}
