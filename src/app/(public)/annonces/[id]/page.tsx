@@ -3,6 +3,9 @@ import { notFound } from "next/navigation";
 import PhotoGallery from "@/components/annonces/PhotoGallery";
 import ContactForm from "@/components/annonces/ContactForm";
 import LocationMapModal from "@/components/annonces/LocationMapModal";
+import ShareButtons from "@/components/annonces/ShareButtons";
+import FavoriteButton from "@/components/annonces/FavoriteButton";
+import ViewTracker from "@/components/annonces/ViewTracker";
 
 const PROPERTY_TYPE_LABELS: Record<string, string> = {
   APARTMENT: "Appartement",
@@ -102,6 +105,7 @@ export default async function AnnoncePage({
 
   return (
     <main className="pb-12 max-w-screen-2xl mx-auto px-6 md:px-12 pt-8">
+      <ViewTracker listingId={annonce.id} />
       <div className="flex flex-col lg:flex-row gap-12">
         {/* ============ MAIN CONTENT (2/3) ============ */}
         <div className="w-full lg:w-2/3">
@@ -158,6 +162,14 @@ export default async function AnnoncePage({
                     : "Prix de vente"}
                 </div>
               </div>
+            </div>
+            <div className="mt-6 flex flex-wrap items-center gap-2">
+              <FavoriteButton listingId={annonce.id} variant="detail" />
+              <ShareButtons
+                title={annonce.title}
+                price={annonce.price}
+                transactionType={annonce.transactionType}
+              />
             </div>
           </section>
 

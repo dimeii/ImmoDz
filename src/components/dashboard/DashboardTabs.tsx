@@ -15,6 +15,8 @@ interface Listing {
   wilaya: { name: string };
   photos: { url: string }[];
   createdAt: string;
+  viewCount: number;
+  contactCount: number;
 }
 
 interface Stats {

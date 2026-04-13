@@ -8,7 +8,7 @@
 
 ## 📊 Avancement global
 
-**~90% d'avancement** — Fondations solides, pages publiques et authentifiées complètes, dashboard/formulaires/agence/admin en place. Reste : sécurité (middleware rôles, rate limiting), modération, features de croissance (favoris, alertes, simulateur), tests.
+**~92% d'avancement** — Fondations solides, pages publiques et authentifiées complètes, middleware rôles + favoris + compteurs + partage en place. Reste : rate limiting uploads, modération, DnD photos, alertes email, prix au m², simulateur, tests.
 
 ---
 
@@ -72,13 +72,18 @@
 - ✅ **Admin panel** (`/admin`) — Page existante (back-office basique)
 
 ### Fonctionnalités
+- ✅ Protection middleware par rôle (USER / DIRECTOR / ADMIN sur `/dashboard`, `/agence`, `/admin`)
+- ✅ Favoris / Wishlist (modèle `Favorite`, API, provider, bouton cœur, page `/dashboard/favoris`)
+- ✅ Compteurs vues / contacts par annonce (tracking session, affichage dashboard)
+- ✅ Partage WhatsApp + copier lien sur fiche annonce
 - ❌ Rate limiting sur uploads (`/api/upload/signature`)
-- ❌ Protection middleware par rôle (middleware actuel ne fait que le gate cookie)
 - ❌ Workflow modération (DRAFT → PENDING → ACTIVE/REJECTED)
 - ❌ Drag-and-drop ordering photos
 - ❌ Historique messages (`/dashboard/messages`)
 - ❌ Notifications emails templates (React Email)
 - ❌ Search avancée (saved searches, alerts)
+- ❌ Prix au m² + comparaison wilaya
+- ❌ Simulateur de crédit
 - ❌ Tests (unit, integration, E2E)
 
 ### Ajouts hors plan initial

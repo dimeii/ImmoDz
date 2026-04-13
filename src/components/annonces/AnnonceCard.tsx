@@ -1,3 +1,5 @@
+import FavoriteButton from "@/components/annonces/FavoriteButton";
+
 interface AnnonceCardProps {
   id: string;
   title: string;
@@ -11,6 +13,7 @@ interface AnnonceCardProps {
 }
 
 export default function AnnonceCard({
+  id,
   title,
   price,
   transactionType,
@@ -26,6 +29,7 @@ export default function AnnonceCard({
         {thumbnail && (
           <img src={thumbnail} alt={title} className="h-full w-full object-cover" />
         )}
+        <FavoriteButton listingId={id} variant="card" />
         <div className="absolute top-2 right-2 bg-primary-950 text-white px-2 py-1 rounded text-xs font-bold">
           {transactionType === "RENT" ? "Location" : "Vente"}
         </div>

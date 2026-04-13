@@ -15,6 +15,8 @@ interface Listing {
   wilaya: { name: string };
   photos: { url: string }[];
   createdAt: string;
+  viewCount: number;
+  contactCount: number;
 }
 
 const PROPERTY_LABELS: Record<string, string> = {
@@ -286,7 +288,7 @@ export default function DashboardListings({
                     {" · "}
                     {PROPERTY_LABELS[listing.propertyType] ?? listing.propertyType}
                   </p>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span
                       className={`text-sm font-bold ${
                         listing.transactionType === "RENT"
@@ -306,6 +308,24 @@ export default function DashboardListings({
                     </span>
                     <span className="text-xs text-gray-400">
                       {listing.transactionType === "RENT" ? "Location" : "Vente"}
+                    </span>
+                    <span
+                      className="inline-flex items-center gap-1 text-xs text-gray-500 bg-gray-50 px-2 py-0.5 rounded font-medium"
+                      title="Vues"
+                    >
+                      <span className="material-symbols-outlined text-[14px]">
+                        visibility
+                      </span>
+                      {listing.viewCount}
+                    </span>
+                    <span
+                      className="inline-flex items-center gap-1 text-xs text-gray-500 bg-gray-50 px-2 py-0.5 rounded font-medium"
+                      title="Contacts reçus"
+                    >
+                      <span className="material-symbols-outlined text-[14px]">
+                        mail
+                      </span>
+                      {listing.contactCount}
                     </span>
                   </div>
                 </div>
