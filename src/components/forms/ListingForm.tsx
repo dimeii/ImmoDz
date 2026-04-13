@@ -165,7 +165,7 @@ export default function ListingForm({ mode, listing }: ListingFormProps) {
     if (markerRef.current) {
       markerRef.current.setLngLat([newLng, newLat]);
     } else if (mapRef.current) {
-      markerRef.current = new mapboxgl.Marker({ color: "#007b30", draggable: true })
+      markerRef.current = new mapboxgl.Marker({ color: "#064e3b", draggable: true })
         .setLngLat([newLng, newLat])
         .addTo(mapRef.current);
       markerRef.current.on("dragend", () => {

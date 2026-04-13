@@ -31,7 +31,7 @@ export default function AnnonceCard({
         </div>
       </div>
       <div className="p-4">
-        <h3 className="font-semibold text-gray-900 line-clamp-2 mb-2">{title}</h3>
+        <h3 className="font-semibold text-gray-900 line-clamp-2 mb-2 hover:underline underline-offset-4 decoration-2">{title}</h3>
         <p className="text-xl font-bold text-primary-950">
           {price.toLocaleString("fr-DZ")} DA
           {transactionType === "RENT" && <span className="text-sm font-normal text-gray-500"> / mois</span>}

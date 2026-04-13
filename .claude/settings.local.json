@@ -54,7 +54,10 @@
       "Bash(curl -s -X POST https://api.ouedkniss.com/graphql -H 'Content-Type: application/json' -d '{\"query\":\"{ search\\(filter: { categorySlug: \\\\\"immobilier\\\\\", page: 1, regionId: 16 }\\) { announcements { data { id title } paginatorInfo { total } } } }\"}')",
       "Bash(curl -s -X POST https://api.ouedkniss.com/graphql -H 'Content-Type: application/json' -d '{\"query\":\"{ search\\(filter: { categorySlug: \\\\\"immobilier\\\\\", page: 1 }\\) { announcements { data { id title price cities { name region { id name } } medias { mediaUrl } categories { slug } } paginatorInfo { total lastPage } } } }\"}')",
       "Bash(curl:*)",
-      "Bash(taskkill /F /IM node.exe)"
+      "Bash(taskkill /F /IM node.exe)",
+      "Bash(xargs grep:*)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(head -20 src/app/api/user/profile/*.ts)"
     ]
   }
 }

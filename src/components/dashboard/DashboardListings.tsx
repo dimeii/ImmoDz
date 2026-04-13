@@ -277,7 +277,7 @@ export default function DashboardListings({
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-gray-900 mb-1 line-clamp-1">
+                  <h3 className="font-bold text-gray-900 mb-1 line-clamp-1 hover:underline underline-offset-4 decoration-2">
                     {listing.title}
                   </h3>
                   <p className="text-sm text-gray-500 mb-2">

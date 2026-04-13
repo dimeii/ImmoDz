@@ -82,7 +82,7 @@ export default function Navbar() {
                 Deposer une annonce
               </Link>
               <button
-                onClick={() => signOut()}
+                onClick={() => signOut({ callbackUrl: "/" })}
                 className="hidden md:inline text-sm font-medium text-emerald-800/60 hover:text-emerald-900 transition-colors"
               >
                 Deconnexion
