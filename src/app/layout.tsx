@@ -1,6 +1,7 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Manrope } from "next/font/google";
 import SessionProvider from "@/components/providers/SessionProvider";
+import RegisterSW from "@/components/providers/RegisterSW";
 import "./globals.css";
 
 const inter = Inter({
@@ -17,6 +18,23 @@ export const metadata: Metadata = {
   title: "ImmoDz — Immobilier en Algérie",
   description:
     "Plateforme de recherche de biens immobiliers (location / vente) en Algérie",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "ImmoDz",
+  },
+  icons: {
+    icon: "/icon.svg",
+    apple: "/icon.svg",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#003527",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
 };
 
 export default function RootLayout({
@@ -34,6 +52,7 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} ${manrope.variable} font-body antialiased`}>
         <SessionProvider>{children}</SessionProvider>
+        <RegisterSW />
       </body>
     </html>
   );

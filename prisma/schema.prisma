@@ -112,8 +112,25 @@ model User {
   contactsSent     ContactRequest[] @relation("ContactSender")
   contactsReceived ContactRequest[] @relation("ContactReceiver")
   favorites        Favorite[]
+  savedSearches    SavedSearch[]
 
   @@map("users")
+}
+
+// ─── Saved Searches / Alertes ─────────────────────────────
+
+model SavedSearch {
+  id             String   @id @default(cuid())
+  userId         String
+  name           String
+  filters        Json
+  lastNotifiedAt DateTime @default(now())
+  createdAt      DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("saved_searches")
 }
 
 // ─── Agency ──────────────────────────────────────────────

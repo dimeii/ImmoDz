@@ -97,6 +97,16 @@
 
 ---
 
+## ⚙️ Configuration à ajouter (TODO)
+
+Actions manuelles à effectuer, triées par priorité :
+
+1. **`CRON_SECRET` dans `.env.local` et sur Vercel** — requis pour `/api/cron/saved-searches` (alertes email). Sans, le cron refuse toute requête (401). Valeur : toute chaîne aléatoire longue (`openssl rand -hex 32`).
+2. **PostGIS sur PostgreSQL Windows** — extension absente localement. Bloqué tant que pas installé via **StackBuilder**. Non-bloquant aujourd'hui (`/api/map/pins` utilise lat/lng Prisma natif), script `prisma/sync-postgis.ts` prêt via `npm run db:sync-postgis` une fois l'installation faite.
+3. **Icônes PWA haute résolution** — actuellement un seul `/icon.svg` placeholder. Pour passer Lighthouse PWA, ajouter `public/icon-192.png` et `public/icon-512.png`, référencer dans `src/app/manifest.ts`.
+
+---
+
 ## 🔧 Configuration requise
 
 ### Variables d'environnement (`.env.local`)
