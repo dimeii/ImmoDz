@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -253,12 +254,14 @@ export default function DashboardListings({
                 href={`/annonces/${listing.id}`}
                 className="flex gap-4 p-4 block"
               >
-                <div className="w-24 h-24 rounded-lg bg-gray-100 flex-shrink-0 overflow-hidden">
+                <div className="w-24 h-24 rounded-lg bg-gray-100 flex-shrink-0 overflow-hidden relative">
                   {listing.photos.length > 0 ? (
-                    <img
+                    <Image
                       src={listing.photos[0].url}
                       alt={listing.title}
-                      className="w-full h-full object-cover"
+                      fill
+                      sizes="96px"
+                      className="object-cover"
                     />
                   ) : (
                     <div className="flex h-full items-center justify-center text-gray-300">

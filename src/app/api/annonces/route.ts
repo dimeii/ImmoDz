@@ -63,6 +63,7 @@ export async function GET(request: NextRequest) {
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     });
   } catch (error) {
+    console.error("GET /api/annonces error:", error);
     if (error instanceof Error && error.name === "ZodError") {
       return NextResponse.json({ error: "Filtres invalides" }, { status: 400 });
     }
