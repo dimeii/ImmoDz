@@ -1,0 +1,46 @@
+{
+  "common": {
+    "appName": "ImmoDz",
+    "tagline": "Immobilier en Algérie",
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "search": "Rechercher",
+    "yes": "Oui",
+    "no": "Non",
+    "confirm": "Confirmer"
+  },
+  "nav": {
+    "home": "Accueil",
+    "search": "Rechercher",
+    "dashboard": "Tableau de bord",
+    "login": "Se connecter",
+    "register": "S'inscrire",
+    "logout": "Déconnexion",
+    "agency": "Mon agence",
+    "admin": "Administration"
+  },
+  "transaction": {
+    "SALE": "Vente",
+    "RENT": "Location"
+  },
+  "property": {
+    "APARTMENT": "Appartement",
+    "HOUSE": "Maison",
+    "VILLA": "Villa",
+    "LAND": "Terrain",
+    "COMMERCIAL": "Local commercial",
+    "OFFICE": "Bureau"
+  },
+  "locale": {
+    "fr": "Français",
+    "ar": "العربية",
+    "switchLanguage": "Changer la langue"
+  }
+}
