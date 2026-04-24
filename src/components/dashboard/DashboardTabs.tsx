@@ -11,6 +11,7 @@ interface Listing {
   transactionType: "RENT" | "SALE";
   propertyType: string;
   status: string;
+  rejectionReason: string | null;
   commune: string | null;
   wilaya: { name: string };
   photos: { url: string }[];

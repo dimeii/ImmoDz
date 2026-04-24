@@ -12,6 +12,7 @@ interface Listing {
   transactionType: "RENT" | "SALE";
   propertyType: string;
   status: string;
+  rejectionReason: string | null;
   commune: string | null;
   wilaya: { name: string };
   photos: { url: string }[];
@@ -162,8 +163,9 @@ export default function DashboardListings({
             >
               <option value="">Tous</option>
               <option value="ACTIVE">Active</option>
-              <option value="DRAFT">Brouillon</option>
               <option value="PENDING">En attente</option>
+              <option value="REJECTED">Rejetée</option>
+              <option value="DRAFT">Brouillon</option>
               <option value="ARCHIVED">Archivée</option>
             </select>
           </div>
@@ -333,6 +335,19 @@ export default function DashboardListings({
                   </div>
                 </div>
               </Link>
+
+              {/* Motif de rejet / info en attente */}
+              {listing.status === "REJECTED" && listing.rejectionReason && (
+                <div className="px-4 py-2 bg-red-50 border-t border-red-100 text-xs text-red-800">
+                  <span className="font-semibold">Motif de rejet : </span>
+                  {listing.rejectionReason}
+                </div>
+              )}
+              {listing.status === "PENDING" && (
+                <div className="px-4 py-2 bg-yellow-50 border-t border-yellow-100 text-xs text-yellow-800">
+                  En attente de validation par un modérateur.
+                </div>
+              )}
 
               {/* Barre d'actions */}
               <div className="flex items-center justify-end gap-2 px-4 py-2 border-t border-gray-50 bg-gray-50/50">

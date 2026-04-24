@@ -107,6 +107,9 @@ export async function POST(request: NextRequest) {
       agencyId = membership?.agencyId;
     }
 
+    // Modération : ADMIN publie direct, les autres passent en PENDING
+    const status = role === "ADMIN" ? "ACTIVE" : "PENDING";
+
     const annonce = await db.listing.create({
       data: {
         ...listingData,
@@ -114,7 +117,7 @@ export async function POST(request: NextRequest) {
         longitude: lng,
         userId: session.user.id,
         agencyId,
-        status: "ACTIVE",
+        status,
       },
     });
 

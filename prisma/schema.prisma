@@ -226,6 +226,11 @@ model Listing {
   viewCount    Int @default(0)
   contactCount Int @default(0)
 
+  // Modération
+  rejectionReason String?   @db.Text
+  reviewedAt      DateTime?
+  reviewedBy      String?
+
   // Relations
   userId    String
   agencyId  String?

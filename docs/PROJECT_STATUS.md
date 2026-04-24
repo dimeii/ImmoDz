@@ -8,7 +8,7 @@
 
 ## 📊 Avancement global
 
-**~97% d'avancement** — Fondations solides, pages publiques et authentifiées complètes, middleware rôles + favoris + compteurs + partage, rate limit uploads, alertes email, prix au m², simulateur de crédit, PWA, migration next/image. Nouveau : annuaire `/agences` avec filtre wilaya + fiche agence `/agences/[slug]` + profil agent `/agents/[id]`, FK `Listing.agencyId`. En cours : multilingue AR/FR (phases 1/2/3 livrées, phase 4 strings à extraire). Reste : modération, DnD photos, historique messages, édition des nouveaux champs profil (bio, spécialités, website, cover), tests.
+**~98% d'avancement** — Fondations solides, pages publiques et authentifiées complètes, middleware rôles + favoris + compteurs + partage, rate limit uploads, alertes email, prix au m², simulateur de crédit, PWA, migration next/image. Livrés récemment : annuaire `/agences` + fiche `/agences/[slug]` + profil agent `/agents/[id]` + édition profil/agence (bio, spécialités, logo, cover, website, foundedYear) ; **workflow modération PENDING → ACTIVE/REJECTED avec motif**, back-office `/admin` + `/admin/moderation`. En cours : multilingue AR/FR (phases 1/2/3 livrées, phase 4 strings à extraire). Reste : DnD photos, historique messages, tests.
 
 ---
 
@@ -33,6 +33,7 @@
 - ✅ **Agency.slug** (unique, nullable temporaire), `coverImage`, `website`, `foundedYear`
 - ✅ **Listing.agencyId** FK directe (onDelete: SetNull) + index — backfillé depuis `AgencyMember`
 - ✅ **User.bio**, `specialtyTypes` (PropertyType[]), `specialtyWilayas` (Int[]) — pour profil agent public
+- ✅ **Listing.rejectionReason / reviewedAt / reviewedBy** — workflow de modération
 
 ### Pages publiques
 - ✅ **Homepage** (`/`) — Vue unifiée avec toggle Carte/Liste
@@ -48,9 +49,10 @@
 - ✅ **Register** (`/register`) — Inscription utilisateurs
 
 ### API Routes
-- ✅ `GET/POST /api/annonces` — Recherche, création listings (auto-lie `agencyId` pour AGENCY_DIRECTOR/EMPLOYEE)
+- ✅ `GET/POST /api/annonces` — Recherche, création listings (statut PENDING par défaut ; ACTIVE direct si ADMIN ; auto-lie `agencyId` pour AGENCY_*)
 - ✅ `GET/PUT/DELETE /api/annonces/[id]` — Gestion annonce individuelle
 - ✅ `GET /api/agences` — Annuaire public filtrable (wilaya, recherche nom), compte annonces via FK directe
+- ✅ `POST /api/admin/listings/moderate` — ADMIN only, action approve / reject avec motif (min 3 chars)
 - ✅ `POST /api/annonces/[id]/photos` — Upload photos
 - ✅ `GET /api/map/pins` — GeoJSON pour carte (avec clustering coords)
 - ✅ `POST /api/contact` — Envoi email + enregistrement BDD
@@ -76,7 +78,8 @@
 - ✅ **Créer annonce** (`/annonces/nouvelle`) — `ListingForm` complet
 - ✅ **Éditer annonce** (`/annonces/[id]/edit`) — Form pré-remplie + upload photos
 - ✅ **Gestion agence** (`/agence`) — Page agence + sous-page `agents`
-- ✅ **Admin panel** (`/admin`) — Page existante (back-office basique)
+- ✅ **Admin panel** (`/admin`) — Dashboard stats (pending/active/rejected/users/agences) + `/admin/moderation` (file d'attente, approve/reject avec motif)
+- ✅ **Profil agent** (`/dashboard/profil`) — Édition avatar, bio, spécialités types + wilayas, téléphone ; lien vers la page publique
 
 ### Fonctionnalités
 - ✅ Protection middleware par rôle (USER / DIRECTOR / ADMIN sur `/dashboard`, `/agence`, `/admin`)
@@ -90,12 +93,14 @@
 - ✅ PWA (manifest.ts + service worker + icônes)
 - ✅ Migration `<img>` → `next/image` (cards, gallery, carousel, dashboard)
 - 🚧 **Multilingue AR/FR avec next-intl** — phases 1/2/3 livrées (infra + routing + RTL + switcher), phase 4 strings à extraire
-- ❌ Workflow modération (DRAFT → PENDING → ACTIVE/REJECTED)
+- ✅ **Workflow modération** (PENDING → ACTIVE/REJECTED) — USER/AGENCY_* en PENDING, ADMIN direct ACTIVE, motif de rejet visible sur dashboard agent
+- ✅ Annuaire agences (`/agences`) + fiche (`/agences/[slug]`) + profil agent (`/agents/[id]`)
+- ✅ Édition des champs profil agent (bio, spécialités) et agence (website, coverImage, foundedYear, logo) depuis le dashboard
+- ❌ Re-modération sur édition d'annonce ACTIVE (aujourd'hui les edits restent ACTIVE sans re-review)
+- ❌ Notification email agent sur approve/reject
 - ❌ Drag-and-drop ordering photos
 - ❌ Historique messages (`/dashboard/messages`)
 - ❌ Notifications emails templates (React Email)
-- ✅ Annuaire agences (`/agences`) + fiche (`/agences/[slug]`) + profil agent (`/agents/[id]`)
-- ❌ Édition des champs profil agent (bio, spécialités) et agence (website, coverImage, foundedYear) depuis le dashboard
 - ❌ Passage de `Agency.slug` en NOT NULL (aujourd'hui nullable, backfillé — migration follow-up à prévoir)
 - ❌ Typage `session.user.role` strict
 - ❌ Tests (unit, integration, E2E)
