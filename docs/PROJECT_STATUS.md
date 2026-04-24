@@ -42,7 +42,7 @@
   - **Vue Liste** — Grille d'annonces avec pagination
   - Filtres temps réel, cache Redis (60s)
 - ✅ **Fiche annonce** (`/annonces/[id]`) — Détails complets + photos + formulaire contact
-- ✅ **Annuaire agences** (`/agences`) — Grille filtrable (wilaya + recherche nom), cards cliquables vers fiche
+- ✅ **Annuaire agences** (`/agences`) — Grille 2 cols filtrable (wilaya + recherche nom), cards larges avec **cover image + logo superposé** (style carte de visite), badges wilaya/année, stats en gros chiffres, icônes contact
 - ✅ **Fiche agence** (`/agences/[slug]`) — Header (logo/cover/contact/web), description, équipe cliquable, annonces actives via FK
 - ✅ **Profil agent** (`/agents/[id]`) — Photo/nom, agence rattachée, bio, spécialités (types + wilayas), annonces actives. 404 pour USER basique (réservé AGENCY_*/ADMIN)
 - ✅ **Login** (`/login`) — Credentials auth
