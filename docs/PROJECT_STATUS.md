@@ -93,11 +93,10 @@
 - ✅ PWA (manifest.ts + service worker + icônes)
 - ✅ Migration `<img>` → `next/image` (cards, gallery, carousel, dashboard)
 - 🚧 **Multilingue AR/FR avec next-intl** — phases 1/2/3 livrées (infra + routing + RTL + switcher), phase 4 strings à extraire
-- ✅ **Workflow modération** (PENDING → ACTIVE/REJECTED) — USER/AGENCY_* en PENDING, ADMIN direct ACTIVE, motif de rejet visible sur dashboard agent
+- ✅ **Workflow modération** (PENDING → ACTIVE/REJECTED) — USER/AGENCY_* en PENDING, ADMIN direct ACTIVE, motif de rejet visible sur dashboard agent + **email Resend à l'agent** sur approve/reject (best-effort, ne bloque pas la modération)
 - ✅ Annuaire agences (`/agences`) + fiche (`/agences/[slug]`) + profil agent (`/agents/[id]`)
 - ✅ Édition des champs profil agent (bio, spécialités) et agence (website, coverImage, foundedYear, logo) depuis le dashboard
 - ❌ Re-modération sur édition d'annonce ACTIVE (aujourd'hui les edits restent ACTIVE sans re-review)
-- ❌ Notification email agent sur approve/reject
 - ❌ Drag-and-drop ordering photos
 - ❌ Historique messages (`/dashboard/messages`)
 - ❌ Notifications emails templates (React Email)
