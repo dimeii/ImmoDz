@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession, signOut } from "next-auth/react";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import LocaleSwitcher from "@/components/ui/LocaleSwitcher";
@@ -75,7 +75,9 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-4">
-          <LocaleSwitcher />
+          <Suspense fallback={null}>
+            <LocaleSwitcher />
+          </Suspense>
           {session ? (
             <>
               <Link
