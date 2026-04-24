@@ -82,7 +82,7 @@
 - ✅ Alertes email sur recherches sauvegardées (`SavedSearch` + cron `/api/cron/saved-searches`)
 - ✅ PWA (manifest.ts + service worker + icônes)
 - ✅ Migration `<img>` → `next/image` (cards, gallery, carousel, dashboard)
-- 🚧 **Multilingue AR/FR avec next-intl** — infra + routing `[locale]` en place ; strings à extraire (phase 3/4 + 4/4)
+- 🚧 **Multilingue AR/FR avec next-intl** — phases 1/2/3 livrées (infra + routing + RTL + switcher), phase 4 strings à extraire
 - ❌ Workflow modération (DRAFT → PENDING → ACTIVE/REJECTED)
 - ❌ Drag-and-drop ordering photos
 - ❌ Historique messages (`/dashboard/messages`)
@@ -109,7 +109,7 @@ Actions manuelles à effectuer, triées par priorité :
 1. **`CRON_SECRET` dans `.env.local` et sur Vercel** — requis pour `/api/cron/saved-searches` (alertes email). Sans, le cron refuse toute requête (401). Valeur : toute chaîne aléatoire longue (`openssl rand -hex 32`).
 2. **PostGIS sur PostgreSQL Windows** — extension absente localement. Bloqué tant que pas installé via **StackBuilder**. Non-bloquant aujourd'hui (`/api/map/pins` utilise lat/lng Prisma natif), script `prisma/sync-postgis.ts` prêt via `npm run db:sync-postgis` une fois l'installation faite.
 3. **Icônes PWA haute résolution** — actuellement un seul `/icon.svg` placeholder. Pour passer Lighthouse PWA, ajouter `public/icon-192.png` et `public/icon-512.png`, référencer dans `src/app/manifest.ts`.
-4. **Vérifier rewrite `/` → `/fr`** — `/fr` et `/fr/gate` rendent OK, `/` sans préfixe à re-tester après cache clear. Si 404 persiste, ajuster le matcher du middleware ou passer `localePrefix: "always"`.
+4. ~~**Vérifier rewrite `/` → `/fr`**~~ ✅ résolu 2026-04-24 : le middleware était à la racine mais avec la structure `src/` Next ignore silencieusement — déplacé dans `src/middleware.ts`. `/` → rewrite `x-middleware-rewrite: /fr`, gate + auth + locale tous actifs.
 
 ---
 
@@ -118,9 +118,9 @@ Actions manuelles à effectuer, triées par priorité :
 Chantier en 4 phases, exécuté sur la branche `dev` (commits `ee6b20a`, `5ae5961`, `a3f5dd0`).
 
 - ✅ **Phase 1 — Infra** : `next-intl` installé, `src/i18n/{routing,navigation,request}.ts`, `messages/fr.json` + `messages/ar.json` (clés `common`, `nav`, `transaction`, `property`, `locale`), plugin branché dans `next.config.mjs`.
-- ✅ **Phase 2 — Routing** : toutes les routes déplacées sous `src/app/[locale]/` (public, auth, admin, gate). Middleware fusionné : bypass API/_next → gate cookie → NextAuth role-based → delegate next-intl. Root layout garde `<html>`/`<body>` avec `lang`/`dir` via `getLocale()`, layout `[locale]` porte `setRequestLocale`.
-- ⏳ **Phase 3 — RTL + switcher** : composant sélecteur FR/AR dans la Navbar, vérification du rendu `dir="rtl"` sur pages AR.
-- ⏳ **Phase 4 — Strings** : extraction progressive des ~47 fichiers `.tsx` (Navbar, Footer, formulaires, cards, dashboard, filtres, contact, simulateur, etc.) vers `messages/*.json`.
+- ✅ **Phase 2 — Routing** : toutes les routes déplacées sous `src/app/[locale]/` (public, auth, admin, gate). Middleware fusionné dans `src/middleware.ts` : bypass API/_next → gate cookie → NextAuth role-based → delegate next-intl.
+- ✅ **Phase 3 — RTL + switcher** : `<html lang dir>` déplacés dans `[locale]/layout.tsx` (pilotés par `params.locale`, root layout devient passthrough), composant `LocaleSwitcher` dans la Navbar, Navbar migrée vers `useTranslations('nav')` + `Link` i18n. `/ar` rend `<html lang="ar" dir="rtl">` avec strings arabes, `/fr` rend FR, `/` rewrite vers `/fr`.
+- ⏳ **Phase 4 — Strings** : extraction progressive des ~47 fichiers `.tsx` restants (Footer, formulaires, cards, dashboard, filtres, contact, simulateur, etc.) vers `messages/*.json`.
 
 Règles :
 - `localePrefix: "as-needed"` → `fr` (défaut) sans préfixe, `ar` avec `/ar/...`

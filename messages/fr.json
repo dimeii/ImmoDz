@@ -24,7 +24,13 @@
     "register": "S'inscrire",
     "logout": "Déconnexion",
     "agency": "Mon agence",
-    "admin": "Administration"
+    "admin": "Administration",
+    "listings": "Annonces",
+    "rent": "Location",
+    "buy": "Achat",
+    "services": "Services",
+    "account": "Mon compte",
+    "postListing": "Déposer une annonce"
   },
   "transaction": {
     "SALE": "Vente",

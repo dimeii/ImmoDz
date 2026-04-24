@@ -24,7 +24,13 @@
     "register": "إنشاء حساب",
     "logout": "تسجيل الخروج",
     "agency": "وكالتي",
-    "admin": "الإدارة"
+    "admin": "الإدارة",
+    "listings": "الإعلانات",
+    "rent": "كراء",
+    "buy": "شراء",
+    "services": "الخدمات",
+    "account": "حسابي",
+    "postListing": "نشر إعلان"
   },
   "transaction": {
     "SALE": "بيع",
