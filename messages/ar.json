@@ -28,6 +28,7 @@
     "listings": "الإعلانات",
     "rent": "كراء",
     "buy": "شراء",
+    "agencies": "وكالاتنا",
     "services": "الخدمات",
     "account": "حسابي",
     "postListing": "نشر إعلان"
@@ -48,5 +49,18 @@
     "fr": "Français",
     "ar": "العربية",
     "switchLanguage": "تغيير اللغة"
+  },
+  "agencies": {
+    "title": "وكالاتنا",
+    "subtitle": "اكتشف الوكالات العقارية الشريكة عبر الجزائر",
+    "filterWilaya": "الولاية",
+    "allWilayas": "جميع الولايات",
+    "searchByName": "اسم الوكالة",
+    "searchPlaceholder": "بحث...",
+    "loading": "جاري تحميل الوكالات...",
+    "empty": "لم يتم العثور على أي وكالة",
+    "emptyHint": "حاول تعديل عوامل التصفية أو البحث باسم آخر.",
+    "listings": "إعلان",
+    "members": "عضو"
   }
 }

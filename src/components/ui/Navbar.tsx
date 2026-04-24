@@ -61,6 +61,12 @@ export default function Navbar() {
             {t("buy")}
           </Link>
           <Link
+            href="/agences"
+            className="text-emerald-800/60 hover:text-emerald-900 transition-colors duration-300"
+          >
+            {t("agencies")}
+          </Link>
+          <Link
             href="#"
             className="text-emerald-800/60 hover:text-emerald-900 transition-colors duration-300"
           >

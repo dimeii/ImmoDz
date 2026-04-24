@@ -28,6 +28,7 @@
     "listings": "Annonces",
     "rent": "Location",
     "buy": "Achat",
+    "agencies": "Nos agences",
     "services": "Services",
     "account": "Mon compte",
     "postListing": "Déposer une annonce"
@@ -48,5 +49,18 @@
     "fr": "Français",
     "ar": "العربية",
     "switchLanguage": "Changer la langue"
+  },
+  "agencies": {
+    "title": "Nos agences",
+    "subtitle": "Découvrez les agences immobilières partenaires à travers l'Algérie",
+    "filterWilaya": "Wilaya",
+    "allWilayas": "Toutes les wilayas",
+    "searchByName": "Nom de l'agence",
+    "searchPlaceholder": "Rechercher...",
+    "loading": "Chargement des agences...",
+    "empty": "Aucune agence trouvée",
+    "emptyHint": "Essayez de modifier vos filtres ou de rechercher un autre nom.",
+    "listings": "annonces",
+    "members": "membres"
   }
 }
