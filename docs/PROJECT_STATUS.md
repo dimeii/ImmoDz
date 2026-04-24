@@ -1,6 +1,6 @@
 # ImmoDz — État des lieux du projet
 
-**Date** : 20 avril 2026
+**Date** : 24 avril 2026
 **Repo** : https://github.com/dimeii/ImmoDz
 **Commit initial** : a2c164f
 
@@ -8,7 +8,7 @@
 
 ## 📊 Avancement global
 
-**~96% d'avancement** — Fondations solides, pages publiques et authentifiées complètes, middleware rôles + favoris + compteurs + partage, rate limit uploads, alertes email, prix au m², simulateur de crédit, PWA, migration next/image. En cours : multilingue AR/FR (infra + routing [locale] livrés, strings à extraire). Reste : modération, DnD photos, historique messages, page recherche d'agences, tests.
+**~97% d'avancement** — Fondations solides, pages publiques et authentifiées complètes, middleware rôles + favoris + compteurs + partage, rate limit uploads, alertes email, prix au m², simulateur de crédit, PWA, migration next/image. Nouveau : annuaire `/agences` avec filtre wilaya + fiche agence `/agences/[slug]` + profil agent `/agents/[id]`, FK `Listing.agencyId`. En cours : multilingue AR/FR (phases 1/2/3 livrées, phase 4 strings à extraire). Reste : modération, DnD photos, historique messages, édition des nouveaux champs profil (bio, spécialités, website, cover), tests.
 
 ---
 
@@ -30,6 +30,9 @@
 - ✅ ListingPhotos (catégories pièces + ordering)
 - ✅ ContactRequests (historique messages)
 - ✅ Wilayas (58 provinces algériennes en arabe)
+- ✅ **Agency.slug** (unique, nullable temporaire), `coverImage`, `website`, `foundedYear`
+- ✅ **Listing.agencyId** FK directe (onDelete: SetNull) + index — backfillé depuis `AgencyMember`
+- ✅ **User.bio**, `specialtyTypes` (PropertyType[]), `specialtyWilayas` (Int[]) — pour profil agent public
 
 ### Pages publiques
 - ✅ **Homepage** (`/`) — Vue unifiée avec toggle Carte/Liste
@@ -38,12 +41,16 @@
   - **Vue Liste** — Grille d'annonces avec pagination
   - Filtres temps réel, cache Redis (60s)
 - ✅ **Fiche annonce** (`/annonces/[id]`) — Détails complets + photos + formulaire contact
+- ✅ **Annuaire agences** (`/agences`) — Grille filtrable (wilaya + recherche nom), cards cliquables vers fiche
+- ✅ **Fiche agence** (`/agences/[slug]`) — Header (logo/cover/contact/web), description, équipe cliquable, annonces actives via FK
+- ✅ **Profil agent** (`/agents/[id]`) — Photo/nom, agence rattachée, bio, spécialités (types + wilayas), annonces actives. 404 pour USER basique (réservé AGENCY_*/ADMIN)
 - ✅ **Login** (`/login`) — Credentials auth
 - ✅ **Register** (`/register`) — Inscription utilisateurs
 
 ### API Routes
-- ✅ `GET/POST /api/annonces` — Recherche, création listings
+- ✅ `GET/POST /api/annonces` — Recherche, création listings (auto-lie `agencyId` pour AGENCY_DIRECTOR/EMPLOYEE)
 - ✅ `GET/PUT/DELETE /api/annonces/[id]` — Gestion annonce individuelle
+- ✅ `GET /api/agences` — Annuaire public filtrable (wilaya, recherche nom), compte annonces via FK directe
 - ✅ `POST /api/annonces/[id]/photos` — Upload photos
 - ✅ `GET /api/map/pins` — GeoJSON pour carte (avec clustering coords)
 - ✅ `POST /api/contact` — Envoi email + enregistrement BDD
@@ -87,7 +94,9 @@
 - ❌ Drag-and-drop ordering photos
 - ❌ Historique messages (`/dashboard/messages`)
 - ❌ Notifications emails templates (React Email)
-- ❌ Page recherche d'agences (`/agences`, distincte de la recherche de biens)
+- ✅ Annuaire agences (`/agences`) + fiche (`/agences/[slug]`) + profil agent (`/agents/[id]`)
+- ❌ Édition des champs profil agent (bio, spécialités) et agence (website, coverImage, foundedYear) depuis le dashboard
+- ❌ Passage de `Agency.slug` en NOT NULL (aujourd'hui nullable, backfillé — migration follow-up à prévoir)
 - ❌ Typage `session.user.role` strict
 - ❌ Tests (unit, integration, E2E)
 

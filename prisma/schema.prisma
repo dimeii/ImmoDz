@@ -105,6 +105,11 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  // Profil public (utilisé surtout pour les agents)
+  bio              String?        @db.Text
+  specialtyTypes   PropertyType[] @default([])
+  specialtyWilayas Int[]          @default([])
+
   accounts         Account[]
   sessions         Session[]
   listings         Listing[]
@@ -137,9 +142,14 @@ model SavedSearch {
 
 model Agency {
   id          String   @id @default(cuid())
+  // Nullable temporairement : backfillé post-migration, à passer NOT NULL dans une migration suivante
+  slug        String?  @unique
   name        String
   description String?  @db.Text
   logo        String?
+  coverImage  String?
+  website     String?
+  foundedYear Int?
   phone       String?
   email       String?
   address     String?
@@ -147,8 +157,9 @@ model Agency {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  wilaya  Wilaya?        @relation(fields: [wilayaCode], references: [code])
-  members AgencyMember[]
+  wilaya   Wilaya?        @relation(fields: [wilayaCode], references: [code])
+  members  AgencyMember[]
+  listings Listing[]
 
   @@map("agencies")
 }
@@ -217,6 +228,7 @@ model Listing {
 
   // Relations
   userId    String
+  agencyId  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -228,6 +240,7 @@ model Listing {
   // Voir CLAUDE.md Gotchas #1
 
   user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  agency          Agency?          @relation(fields: [agencyId], references: [id], onDelete: SetNull)
   wilaya          Wilaya           @relation(fields: [wilayaCode], references: [code])
   quartier        Quartier?        @relation(fields: [quartierId], references: [id])
   photos          ListingPhoto[]
@@ -237,6 +250,7 @@ model Listing {
   @@index([status, transactionType, propertyType])
   @@index([wilayaCode])
   @@index([quartierId])
+  @@index([agencyId])
   @@index([price])
   @@map("listings")
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 
 type Wilaya = {
   code: number;
@@ -11,6 +12,7 @@ type Wilaya = {
 
 type Agency = {
   id: string;
+  slug: string | null;
   name: string;
   description: string | null;
   logo: string | null;
@@ -121,11 +123,22 @@ export default function AgencesContent() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {agencies.map((a) => (
-              <article
-                key={a.id}
-                className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-5 flex flex-col"
-              >
+            {agencies.map((a) => {
+              const CardWrapper = ({ children }: { children: React.ReactNode }) =>
+                a.slug ? (
+                  <Link
+                    href={`/agences/${a.slug}`}
+                    className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-5 flex flex-col"
+                  >
+                    {children}
+                  </Link>
+                ) : (
+                  <article className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-5 flex flex-col">
+                    {children}
+                  </article>
+                );
+              return (
+                <CardWrapper key={a.id}>
                 <div className="flex items-start gap-3 mb-3">
                   <div className="w-14 h-14 rounded-full bg-emerald-100 flex-shrink-0 overflow-hidden flex items-center justify-center">
                     {a.logo ? (
@@ -170,26 +183,13 @@ export default function AgencesContent() {
 
                 {(a.phone || a.email) && (
                   <div className="mt-3 pt-3 border-t border-emerald-100 flex flex-col gap-1 text-xs text-emerald-800/80">
-                    {a.phone && (
-                      <a
-                        href={`tel:${a.phone}`}
-                        className="hover:text-emerald-900 transition-colors"
-                      >
-                        {a.phone}
-                      </a>
-                    )}
-                    {a.email && (
-                      <a
-                        href={`mailto:${a.email}`}
-                        className="hover:text-emerald-900 transition-colors truncate"
-                      >
-                        {a.email}
-                      </a>
-                    )}
+                    {a.phone && <span>{a.phone}</span>}
+                    {a.email && <span className="truncate">{a.email}</span>}
                   </div>
                 )}
-              </article>
-            ))}
+                </CardWrapper>
+              );
+            })}
           </div>
         )}
       </div>

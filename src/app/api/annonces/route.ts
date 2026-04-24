@@ -97,12 +97,23 @@ export async function POST(request: NextRequest) {
 
     const { lat, lng, ...listingData } = validated;
 
+    // Auto-lier l'annonce à l'agence du user si AGENCY_DIRECTOR/EMPLOYEE
+    let agencyId: string | undefined;
+    if (role === "AGENCY_DIRECTOR" || role === "AGENCY_EMPLOYEE") {
+      const membership = await db.agencyMember.findFirst({
+        where: { userId: session.user.id },
+        select: { agencyId: true },
+      });
+      agencyId = membership?.agencyId;
+    }
+
     const annonce = await db.listing.create({
       data: {
         ...listingData,
         latitude: lat,
         longitude: lng,
         userId: session.user.id,
+        agencyId,
         status: "ACTIVE",
       },
     });
