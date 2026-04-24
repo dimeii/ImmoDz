@@ -6,6 +6,8 @@ import LocationMapModal from "@/components/annonces/LocationMapModal";
 import ShareButtons from "@/components/annonces/ShareButtons";
 import FavoriteButton from "@/components/annonces/FavoriteButton";
 import ViewTracker from "@/components/annonces/ViewTracker";
+import CreditSimulator from "@/components/annonces/CreditSimulator";
+import { pricePerSqm, formatPricePerSqm } from "@/lib/price";
 
 const PROPERTY_TYPE_LABELS: Record<string, string> = {
   APARTMENT: "Appartement",
@@ -51,6 +53,30 @@ export default async function AnnoncePage({
   });
 
   if (!annonce) notFound();
+
+  const currentPpsm = pricePerSqm(annonce.price, annonce.surface);
+
+  const comparables = await db.listing.findMany({
+    where: {
+      status: "ACTIVE",
+      wilayaCode: annonce.wilayaCode,
+      propertyType: annonce.propertyType,
+      transactionType: annonce.transactionType,
+      surface: { gt: 0 },
+      id: { not: annonce.id },
+    },
+    select: { price: true, surface: true },
+  });
+  const ppsmValues = comparables
+    .map((l) => pricePerSqm(l.price, l.surface))
+    .filter((n): n is number => n != null && n > 0);
+  const avgPpsm = ppsmValues.length
+    ? Math.round(ppsmValues.reduce((a, b) => a + b, 0) / ppsmValues.length)
+    : null;
+  const deviation =
+    currentPpsm && avgPpsm
+      ? Math.round(((currentPpsm - avgPpsm) / avgPpsm) * 100)
+      : null;
 
   const activeAmenities = AMENITY_MAP.filter(
     (a) => (annonce as Record<string, unknown>)[a.key] === true
@@ -161,6 +187,11 @@ export default async function AnnoncePage({
                     ? "Par mois"
                     : "Prix de vente"}
                 </div>
+                {currentPpsm && (
+                  <div className="text-on-surface-variant text-xs font-semibold mt-1">
+                    {formatPricePerSqm(currentPpsm)}
+                  </div>
+                )}
               </div>
             </div>
             <div className="mt-6 flex flex-wrap items-center gap-2">
@@ -189,6 +220,63 @@ export default async function AnnoncePage({
                   </span>
                 </div>
               ))}
+            </section>
+          )}
+
+          {/* Position marché */}
+          {currentPpsm && avgPpsm && ppsmValues.length >= 3 && deviation !== null && (
+            <section className="mb-12 bg-surface-container-low p-8 rounded-xl">
+              <h3 className="text-2xl font-headline font-bold text-primary mb-6">
+                Position par rapport au marché
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="flex flex-col gap-1">
+                  <span className="text-sm text-on-surface-variant uppercase tracking-wider font-semibold">
+                    Ce bien
+                  </span>
+                  <span className="text-2xl font-headline font-bold text-primary">
+                    {formatPricePerSqm(currentPpsm)}
+                  </span>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-sm text-on-surface-variant uppercase tracking-wider font-semibold">
+                    Moyenne{" "}
+                    {PROPERTY_TYPE_LABELS[annonce.propertyType]?.toLowerCase() ??
+                      annonce.propertyType.toLowerCase()}{" "}
+                    à {annonce.wilaya.name}
+                  </span>
+                  <span className="text-2xl font-headline font-bold text-primary">
+                    {formatPricePerSqm(avgPpsm)}
+                  </span>
+                  <span className="text-xs text-on-surface-variant font-medium">
+                    sur {ppsmValues.length} bien{ppsmValues.length > 1 ? "s" : ""}
+                  </span>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-sm text-on-surface-variant uppercase tracking-wider font-semibold">
+                    Écart
+                  </span>
+                  <span
+                    className={`text-2xl font-headline font-bold ${
+                      deviation > 0
+                        ? "text-red-600"
+                        : deviation < 0
+                          ? "text-green-600"
+                          : "text-primary"
+                    }`}
+                  >
+                    {deviation > 0 ? "+" : ""}
+                    {deviation}%
+                  </span>
+                  <span className="text-xs text-on-surface-variant font-medium">
+                    {deviation > 0
+                      ? "au-dessus du marché"
+                      : deviation < 0
+                        ? "en-dessous du marché"
+                        : "dans la moyenne"}
+                  </span>
+                </div>
+              </div>
             </section>
           )}
 
@@ -226,6 +314,12 @@ export default async function AnnoncePage({
               </div>
             )}
           </section>
+
+          {/* Simulateur de crédit (vente uniquement) */}
+          <CreditSimulator
+            price={annonce.price}
+            transactionType={annonce.transactionType}
+          />
 
           {/* Map Section */}
           <LocationMapModal

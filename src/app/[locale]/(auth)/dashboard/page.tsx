@@ -109,9 +109,21 @@ export default async function DashboardPage() {
           </Link>
           <Link
             href="/dashboard/favoris"
-            className="rounded-2xl border-2 border-gray-200 bg-white text-primary-950 px-6 py-4 font-bold hover:border-primary-950 transition-all sm:col-span-2"
+            className="rounded-2xl border-2 border-gray-200 bg-white text-primary-950 px-6 py-4 font-bold hover:border-primary-950 transition-all"
           >
             ❤️ Mes favoris
+          </Link>
+          <Link
+            href="/dashboard/alertes"
+            className="rounded-2xl border-2 border-gray-200 bg-white text-primary-950 px-6 py-4 font-bold hover:border-primary-950 transition-all"
+          >
+            🔔 Mes alertes
+          </Link>
+          <Link
+            href="/dashboard/profil"
+            className="rounded-2xl border-2 border-gray-200 bg-white text-primary-950 px-6 py-4 font-bold hover:border-primary-950 transition-all"
+          >
+            👤 Mon profil
           </Link>
         </div>
 

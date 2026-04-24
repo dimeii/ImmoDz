@@ -63,9 +63,18 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     const validated = updateAgenceSchema.parse(body);
 
+    // Empty strings → null for nullable text columns
+    const data = {
+      ...validated,
+      email: validated.email === "" ? null : validated.email,
+      website: validated.website === "" ? null : validated.website,
+      logo: validated.logo === "" ? null : validated.logo,
+      coverImage: validated.coverImage === "" ? null : validated.coverImage,
+    };
+
     const updated = await db.agency.update({
       where: { id: membership.agencyId },
-      data: validated,
+      data,
       include: { wilaya: true },
     });
 

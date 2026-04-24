@@ -1,6 +1,6 @@
 # ImmoDz — État des lieux du projet
 
-**Date** : 31 mars 2026
+**Date** : 24 avril 2026
 **Repo** : https://github.com/dimeii/ImmoDz
 **Commit initial** : a2c164f
 
@@ -8,7 +8,7 @@
 
 ## 📊 Avancement global
 
-**~92% d'avancement** — Fondations solides, pages publiques et authentifiées complètes, middleware rôles + favoris + compteurs + partage en place. Reste : rate limiting uploads, modération, DnD photos, alertes email, prix au m², simulateur, tests.
+**~98% d'avancement** — Fondations solides, pages publiques et authentifiées complètes, middleware rôles + favoris + compteurs + partage, rate limit uploads, alertes email, prix au m², simulateur de crédit, PWA, migration next/image. Livrés récemment : annuaire `/agences` + fiche `/agences/[slug]` + profil agent `/agents/[id]` + édition profil/agence (bio, spécialités, logo, cover, website, foundedYear) ; **workflow modération PENDING → ACTIVE/REJECTED avec motif**, back-office `/admin` + `/admin/moderation`. En cours : multilingue AR/FR (phases 1/2/3 livrées, phase 4 strings à extraire). Reste : DnD photos, historique messages, tests.
 
 ---
 
@@ -30,6 +30,10 @@
 - ✅ ListingPhotos (catégories pièces + ordering)
 - ✅ ContactRequests (historique messages)
 - ✅ Wilayas (58 provinces algériennes en arabe)
+- ✅ **Agency.slug** (unique, nullable temporaire), `coverImage`, `website`, `foundedYear`
+- ✅ **Listing.agencyId** FK directe (onDelete: SetNull) + index — backfillé depuis `AgencyMember`
+- ✅ **User.bio**, `specialtyTypes` (PropertyType[]), `specialtyWilayas` (Int[]) — pour profil agent public
+- ✅ **Listing.rejectionReason / reviewedAt / reviewedBy** — workflow de modération
 
 ### Pages publiques
 - ✅ **Homepage** (`/`) — Vue unifiée avec toggle Carte/Liste
@@ -38,12 +42,17 @@
   - **Vue Liste** — Grille d'annonces avec pagination
   - Filtres temps réel, cache Redis (60s)
 - ✅ **Fiche annonce** (`/annonces/[id]`) — Détails complets + photos + formulaire contact
+- ✅ **Annuaire agences** (`/agences`) — Grille filtrable (wilaya + recherche nom), cards cliquables vers fiche
+- ✅ **Fiche agence** (`/agences/[slug]`) — Header (logo/cover/contact/web), description, équipe cliquable, annonces actives via FK
+- ✅ **Profil agent** (`/agents/[id]`) — Photo/nom, agence rattachée, bio, spécialités (types + wilayas), annonces actives. 404 pour USER basique (réservé AGENCY_*/ADMIN)
 - ✅ **Login** (`/login`) — Credentials auth
 - ✅ **Register** (`/register`) — Inscription utilisateurs
 
 ### API Routes
-- ✅ `GET/POST /api/annonces` — Recherche, création listings
+- ✅ `GET/POST /api/annonces` — Recherche, création listings (statut PENDING par défaut ; ACTIVE direct si ADMIN ; auto-lie `agencyId` pour AGENCY_*)
 - ✅ `GET/PUT/DELETE /api/annonces/[id]` — Gestion annonce individuelle
+- ✅ `GET /api/agences` — Annuaire public filtrable (wilaya, recherche nom), compte annonces via FK directe
+- ✅ `POST /api/admin/listings/moderate` — ADMIN only, action approve / reject avec motif (min 3 chars)
 - ✅ `POST /api/annonces/[id]/photos` — Upload photos
 - ✅ `GET /api/map/pins` — GeoJSON pour carte (avec clustering coords)
 - ✅ `POST /api/contact` — Envoi email + enregistrement BDD
@@ -69,21 +78,30 @@
 - ✅ **Créer annonce** (`/annonces/nouvelle`) — `ListingForm` complet
 - ✅ **Éditer annonce** (`/annonces/[id]/edit`) — Form pré-remplie + upload photos
 - ✅ **Gestion agence** (`/agence`) — Page agence + sous-page `agents`
-- ✅ **Admin panel** (`/admin`) — Page existante (back-office basique)
+- ✅ **Admin panel** (`/admin`) — Dashboard stats (pending/active/rejected/users/agences) + `/admin/moderation` (file d'attente, approve/reject avec motif)
+- ✅ **Profil agent** (`/dashboard/profil`) — Édition avatar, bio, spécialités types + wilayas, téléphone ; lien vers la page publique
 
 ### Fonctionnalités
 - ✅ Protection middleware par rôle (USER / DIRECTOR / ADMIN sur `/dashboard`, `/agence`, `/admin`)
 - ✅ Favoris / Wishlist (modèle `Favorite`, API, provider, bouton cœur, page `/dashboard/favoris`)
 - ✅ Compteurs vues / contacts par annonce (tracking session, affichage dashboard)
 - ✅ Partage WhatsApp + copier lien sur fiche annonce
-- ❌ Rate limiting sur uploads (`/api/upload/signature`)
-- ❌ Workflow modération (DRAFT → PENDING → ACTIVE/REJECTED)
+- ✅ Rate limiting sur uploads (`/api/upload/signature`) — 20/h via Redis
+- ✅ Prix au m² + comparaison wilaya (section "position sur le marché")
+- ✅ Simulateur de crédit (composant `CreditSimulator` sur fiche vente)
+- ✅ Alertes email sur recherches sauvegardées (`SavedSearch` + cron `/api/cron/saved-searches`)
+- ✅ PWA (manifest.ts + service worker + icônes)
+- ✅ Migration `<img>` → `next/image` (cards, gallery, carousel, dashboard)
+- 🚧 **Multilingue AR/FR avec next-intl** — phases 1/2/3 livrées (infra + routing + RTL + switcher), phase 4 strings à extraire
+- ✅ **Workflow modération** (PENDING → ACTIVE/REJECTED) — USER/AGENCY_* en PENDING, ADMIN direct ACTIVE, motif de rejet visible sur dashboard agent + **email Resend à l'agent** sur approve/reject (best-effort, ne bloque pas la modération)
+- ✅ Annuaire agences (`/agences`) + fiche (`/agences/[slug]`) + profil agent (`/agents/[id]`)
+- ✅ Édition des champs profil agent (bio, spécialités) et agence (website, coverImage, foundedYear, logo) depuis le dashboard
+- ❌ Re-modération sur édition d'annonce ACTIVE (aujourd'hui les edits restent ACTIVE sans re-review)
 - ❌ Drag-and-drop ordering photos
 - ❌ Historique messages (`/dashboard/messages`)
 - ❌ Notifications emails templates (React Email)
-- ❌ Search avancée (saved searches, alerts)
-- ❌ Prix au m² + comparaison wilaya
-- ❌ Simulateur de crédit
+- ❌ Passage de `Agency.slug` en NOT NULL (aujourd'hui nullable, backfillé — migration follow-up à prévoir)
+- ❌ Typage `session.user.role` strict
 - ❌ Tests (unit, integration, E2E)
 
 ### Ajouts hors plan initial
@@ -94,6 +112,32 @@
 - ✅ Scraper OuedKniss + import scraped listings
 - ✅ Lightbox photos, filtrage carte par agent, modal carte sur fiche annonce
 - ✅ `PhotoUploadSection` avec catégories de pièces
+
+---
+
+## ⚙️ Configuration à ajouter (TODO)
+
+Actions manuelles à effectuer, triées par priorité :
+
+1. **`CRON_SECRET` dans `.env.local` et sur Vercel** — requis pour `/api/cron/saved-searches` (alertes email). Sans, le cron refuse toute requête (401). Valeur : toute chaîne aléatoire longue (`openssl rand -hex 32`).
+2. **PostGIS sur PostgreSQL Windows** — extension absente localement. Bloqué tant que pas installé via **StackBuilder**. Non-bloquant aujourd'hui (`/api/map/pins` utilise lat/lng Prisma natif), script `prisma/sync-postgis.ts` prêt via `npm run db:sync-postgis` une fois l'installation faite.
+3. **Icônes PWA haute résolution** — actuellement un seul `/icon.svg` placeholder. Pour passer Lighthouse PWA, ajouter `public/icon-192.png` et `public/icon-512.png`, référencer dans `src/app/manifest.ts`.
+4. ~~**Vérifier rewrite `/` → `/fr`**~~ ✅ résolu 2026-04-24 : le middleware était à la racine mais avec la structure `src/` Next ignore silencieusement — déplacé dans `src/middleware.ts`. `/` → rewrite `x-middleware-rewrite: /fr`, gate + auth + locale tous actifs.
+
+---
+
+## 🌍 Multilingue AR/FR (état)
+
+Chantier en 4 phases, exécuté sur la branche `dev` (commits `ee6b20a`, `5ae5961`, `a3f5dd0`).
+
+- ✅ **Phase 1 — Infra** : `next-intl` installé, `src/i18n/{routing,navigation,request}.ts`, `messages/fr.json` + `messages/ar.json` (clés `common`, `nav`, `transaction`, `property`, `locale`), plugin branché dans `next.config.mjs`.
+- ✅ **Phase 2 — Routing** : toutes les routes déplacées sous `src/app/[locale]/` (public, auth, admin, gate). Middleware fusionné dans `src/middleware.ts` : bypass API/_next → gate cookie → NextAuth role-based → delegate next-intl.
+- ✅ **Phase 3 — RTL + switcher** : `<html lang dir>` déplacés dans `[locale]/layout.tsx` (pilotés par `params.locale`, root layout devient passthrough), composant `LocaleSwitcher` dans la Navbar, Navbar migrée vers `useTranslations('nav')` + `Link` i18n. `/ar` rend `<html lang="ar" dir="rtl">` avec strings arabes, `/fr` rend FR, `/` rewrite vers `/fr`.
+- ⏳ **Phase 4 — Strings** : extraction progressive des ~47 fichiers `.tsx` restants (Footer, formulaires, cards, dashboard, filtres, contact, simulateur, etc.) vers `messages/*.json`.
+
+Règles :
+- `localePrefix: "as-needed"` → `fr` (défaut) sans préfixe, `ar` avec `/ar/...`
+- Tous les `<Link href>` internes devront passer par `@/i18n/navigation` pour préfixer auto selon le locale
 
 ---
 

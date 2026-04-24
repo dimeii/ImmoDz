@@ -1,0 +1,66 @@
+{
+  "common": {
+    "appName": "إيمو دي زاد",
+    "tagline": "العقارات في الجزائر",
+    "loading": "جاري التحميل...",
+    "error": "خطأ",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "back": "رجوع",
+    "next": "التالي",
+    "previous": "السابق",
+    "search": "بحث",
+    "yes": "نعم",
+    "no": "لا",
+    "confirm": "تأكيد"
+  },
+  "nav": {
+    "home": "الرئيسية",
+    "search": "بحث",
+    "dashboard": "لوحة التحكم",
+    "login": "تسجيل الدخول",
+    "register": "إنشاء حساب",
+    "logout": "تسجيل الخروج",
+    "agency": "وكالتي",
+    "admin": "الإدارة",
+    "listings": "الإعلانات",
+    "rent": "كراء",
+    "buy": "شراء",
+    "agencies": "وكالاتنا",
+    "services": "الخدمات",
+    "account": "حسابي",
+    "postListing": "نشر إعلان"
+  },
+  "transaction": {
+    "SALE": "بيع",
+    "RENT": "إيجار"
+  },
+  "property": {
+    "APARTMENT": "شقة",
+    "HOUSE": "منزل",
+    "VILLA": "فيلا",
+    "LAND": "أرض",
+    "COMMERCIAL": "محل تجاري",
+    "OFFICE": "مكتب"
+  },
+  "locale": {
+    "fr": "Français",
+    "ar": "العربية",
+    "switchLanguage": "تغيير اللغة"
+  },
+  "agencies": {
+    "title": "وكالاتنا",
+    "subtitle": "اكتشف الوكالات العقارية الشريكة عبر الجزائر",
+    "filterWilaya": "الولاية",
+    "allWilayas": "جميع الولايات",
+    "searchByName": "اسم الوكالة",
+    "searchPlaceholder": "بحث...",
+    "loading": "جاري تحميل الوكالات...",
+    "empty": "لم يتم العثور على أي وكالة",
+    "emptyHint": "حاول تعديل عوامل التصفية أو البحث باسم آخر.",
+    "listings": "إعلان",
+    "members": "عضو"
+  }
+}

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useEffect, useCallback } from "react";
 
 interface Photo {
@@ -67,10 +68,13 @@ export default function PhotoGallery({ photos }: PhotoGalleryProps) {
           className="col-span-12 md:col-span-8 h-full rounded-xl overflow-hidden relative group cursor-pointer"
           onClick={() => setLightboxIndex(0)}
         >
-          <img
+          <Image
             src={mainPhoto.url}
             alt={mainPhoto.category}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            fill
+            sizes="(max-width: 768px) 100vw, 66vw"
+            priority
+            className="object-cover transition-transform duration-700 group-hover:scale-105"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
         </div>
@@ -84,10 +88,12 @@ export default function PhotoGallery({ photos }: PhotoGalleryProps) {
                 className="flex-1 rounded-xl overflow-hidden relative cursor-pointer"
                 onClick={() => setLightboxIndex(i + 1)}
               >
-                <img
+                <Image
                   src={photo.url}
                   alt={photo.category}
-                  className="w-full h-full object-cover"
+                  fill
+                  sizes="(max-width: 768px) 0px, 33vw"
+                  className="object-cover"
                 />
                 {/* "+N Photos" overlay on last side photo */}
                 {i === sidePhotos.length - 1 && remainingCount > 0 && (

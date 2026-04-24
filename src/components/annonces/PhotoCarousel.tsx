@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 
 interface PhotoCarouselProps {
@@ -22,11 +23,13 @@ export default function PhotoCarousel({ photos, alt = "" }: PhotoCarouselProps) 
 
   return (
     <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-gray-100 group">
-      <img
+      <Image
         key={index}
         src={photos[index].url}
         alt={alt}
-        className="h-full w-full object-cover animate-[fadeIn_0.15s_ease-out]"
+        fill
+        sizes="(max-width: 768px) 100vw, 400px"
+        className="object-cover animate-[fadeIn_0.15s_ease-out]"
       />
 
       {/* Counter */}

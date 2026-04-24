@@ -1,0 +1,66 @@
+{
+  "common": {
+    "appName": "ImmoDz",
+    "tagline": "Immobilier en Algérie",
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "search": "Rechercher",
+    "yes": "Oui",
+    "no": "Non",
+    "confirm": "Confirmer"
+  },
+  "nav": {
+    "home": "Accueil",
+    "search": "Rechercher",
+    "dashboard": "Tableau de bord",
+    "login": "Se connecter",
+    "register": "S'inscrire",
+    "logout": "Déconnexion",
+    "agency": "Mon agence",
+    "admin": "Administration",
+    "listings": "Annonces",
+    "rent": "Location",
+    "buy": "Achat",
+    "agencies": "Nos agences",
+    "services": "Services",
+    "account": "Mon compte",
+    "postListing": "Déposer une annonce"
+  },
+  "transaction": {
+    "SALE": "Vente",
+    "RENT": "Location"
+  },
+  "property": {
+    "APARTMENT": "Appartement",
+    "HOUSE": "Maison",
+    "VILLA": "Villa",
+    "LAND": "Terrain",
+    "COMMERCIAL": "Local commercial",
+    "OFFICE": "Bureau"
+  },
+  "locale": {
+    "fr": "Français",
+    "ar": "العربية",
+    "switchLanguage": "Changer la langue"
+  },
+  "agencies": {
+    "title": "Nos agences",
+    "subtitle": "Découvrez les agences immobilières partenaires à travers l'Algérie",
+    "filterWilaya": "Wilaya",
+    "allWilayas": "Toutes les wilayas",
+    "searchByName": "Nom de l'agence",
+    "searchPlaceholder": "Rechercher...",
+    "loading": "Chargement des agences...",
+    "empty": "Aucune agence trouvée",
+    "emptyHint": "Essayez de modifier vos filtres ou de rechercher un autre nom.",
+    "listings": "annonces",
+    "members": "membres"
+  }
+}

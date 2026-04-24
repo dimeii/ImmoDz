@@ -63,6 +63,7 @@ export async function GET(request: NextRequest) {
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     });
   } catch (error) {
+    console.error("GET /api/annonces error:", error);
     if (error instanceof Error && error.name === "ZodError") {
       return NextResponse.json({ error: "Filtres invalides" }, { status: 400 });
     }
@@ -96,13 +97,27 @@ export async function POST(request: NextRequest) {
 
     const { lat, lng, ...listingData } = validated;
 
+    // Auto-lier l'annonce à l'agence du user si AGENCY_DIRECTOR/EMPLOYEE
+    let agencyId: string | undefined;
+    if (role === "AGENCY_DIRECTOR" || role === "AGENCY_EMPLOYEE") {
+      const membership = await db.agencyMember.findFirst({
+        where: { userId: session.user.id },
+        select: { agencyId: true },
+      });
+      agencyId = membership?.agencyId;
+    }
+
+    // Modération : ADMIN publie direct, les autres passent en PENDING
+    const status = role === "ADMIN" ? "ACTIVE" : "PENDING";
+
     const annonce = await db.listing.create({
       data: {
         ...listingData,
         latitude: lat,
         longitude: lng,
         userId: session.user.id,
-        status: "ACTIVE",
+        agencyId,
+        status,
       },
     });
 

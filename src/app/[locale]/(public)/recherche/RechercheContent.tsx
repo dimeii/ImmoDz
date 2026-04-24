@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import MapView, { PinProperties } from "@/components/map/MapView";
 import AnnonceList from "@/components/annonces/AnnonceList";
 import SearchFilters from "@/components/ui/SearchFilters";
+import SaveSearchButton from "@/components/search/SaveSearchButton";
 import PhotoCarousel from "@/components/annonces/PhotoCarousel";
 import Link from "next/link";
 
@@ -134,6 +135,9 @@ export default function RechercheContent() {
         </div>
         <div className="p-6 overflow-y-auto scrollbar-hide flex-1">
           <SearchFilters onFiltersChange={handleFiltersChange} />
+          <div className="mt-6 pt-6 border-t border-outline-variant/20">
+            <SaveSearchButton filters={filters} />
+          </div>
         </div>
         {/* Mobile apply button */}
         <div className="md:hidden px-6 pb-6">
