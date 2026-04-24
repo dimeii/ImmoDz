@@ -115,6 +115,49 @@
 
 ---
 
+## 🗺️ Roadmap produit (à attaquer plus tard)
+
+Audit stratégique du 2026-04-24 — classé par impact business, pas par complexité technique.
+
+### 🔴 Bloquant pour ouvrir au public
+1. **Mentions légales, CGU, politique de données** — obligation loi 18-07 algérienne sur la protection des données personnelles. Pages `/mentions-legales`, `/cgu`, `/confidentialite` + bandeau cookies + case d'acceptation à l'inscription.
+2. **Signalement d'annonce** — bouton "Signaler" sur `/annonces/[id]` + modèle `ListingReport` + file de signalements dans `/admin/moderation` (onglet séparé). Indispensable contre les faux / escroqueries.
+3. **KYC agences** — upload registre du commerce (Cloudinary), vérif manuelle par ADMIN, badge "Vérifié" sur fiche agence + listings. Le marché algérien étant saturé de faux agents, c'est LE signal de confiance différenciateur.
+
+### 🟡 Engagement / rétention
+4. **Messagerie interne** (chat client ↔ agent) — modèle `Thread` + `ThreadMessage`, page `/dashboard/messages`, Server-Sent Events ou polling. Aujourd'hui le contact est un email unique → zéro continuité de conversation.
+5. **Alertes WhatsApp** via WhatsApp Business API (complément d'Email `SavedSearch`). En Algérie 90 % des transactions immo passent par WhatsApp — killer feature pour le marché local.
+6. **SEO par wilaya × type** — pages statiques indexables `/location-appartement-alger`, `/vente-villa-oran`, `/location-studio-oran-bir-el-djir`. Aujourd'hui `/recherche?...` = zéro SEO. Générer via `generateStaticParams` croisé wilayas × types × transaction.
+7. **Sitemap.xml dynamique** + `robots.txt` configurés + Open Graph / Twitter cards sur fiches annonce et fiches agence.
+8. **Prise de RDV intégrée** (slot picker type calendly). Le formulaire de contact convertit 5× moins qu'un créneau cliquable. Modèle `Appointment` + UI sur fiche annonce.
+
+### 🟢 Monétisation
+9. **Abonnements agences** (freemium Stripe / CIB) — limite d'annonces actives par plan, champ `Agency.plan` + hooks de limite dans `POST /api/annonces`.
+10. **Boost d'annonce** payant — champ `Listing.boostedUntil DateTime?`, tri prioritaire côté `/recherche` et `/api/map/pins` pour les listings boostés actifs.
+11. **Analytics détaillées par annonce** — sources (referrer), heatmap de vues par wilaya, graph 30 jours. Justifie le plan premium.
+
+### 🔵 Produit premium (différenciation)
+12. **Avis / ratings agences** — modèle `AgencyReview` (rating 1-5 + commentaire), réponse publique de l'agence, affichage sur fiche.
+13. **Score quartier** — écoles proches, commerces, transport, sécurité. Données depuis OSM overpass + scraping éducation/transport. Gros SEO longue traîne.
+14. **Visite virtuelle / plan 3D** — intégration Matterport ou upload vidéo 360° (Cloudinary). Indispensable pour le haut de gamme.
+15. **Comparateur** (2-3 annonces côte à côte) — prix/m², équipements, pièces, wilaya.
+16. **Historique de prix** — tracker baisses de prix + durée en ligne (champ `priceHistory Json[]`).
+
+### ⚫ Technique / opérationnel
+17. **Tests** (Vitest + Playwright) — 0 aujourd'hui.
+18. **Sentry** ou équivalent — observabilité erreurs prod, absent.
+19. **Backups BDD** — vérifier la politique Railway, ajouter dump auto sur S3/R2 si pas suffisant.
+20. **i18n phase 4** — extraction des strings des ~47 `.tsx` restants (Footer, forms, cards, dashboard, simulateur, filtres).
+21. **Re-modération sur édition** d'annonce ACTIVE (aujourd'hui les edits passent direct sans review).
+22. **Drag-and-drop ordering photos** dans le formulaire annonce.
+23. **`Agency.slug` NOT NULL** — aujourd'hui nullable, toutes les rows ont un slug, migration follow-up safe.
+24. **Typage strict `session.user.role`** — actuellement cast via `as { role?: string }` partout.
+
+### Triangle recommandé
+Si on attaque plus tard : **#3 KYC + badge vérifié** (différenciation immédiate) → **#4 messagerie interne** (engagement) → **#6 SEO pages wilaya** (acquisition gratuite). C'est le triangle trust / engagement / acquisition qui fait passer d'un MVP à une vraie plateforme.
+
+---
+
 ## ⚙️ Configuration à ajouter (TODO)
 
 Actions manuelles à effectuer, triées par priorité :
