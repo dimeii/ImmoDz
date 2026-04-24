@@ -46,6 +46,7 @@ export async function GET(request: NextRequest) {
       email: a.email,
       address: a.address,
       foundedYear: a.foundedYear,
+      kycStatus: a.kycStatus,
       wilaya: a.wilaya
         ? { code: a.wilaya.code, name: a.wilaya.name, nameAr: a.wilaya.nameAr }
         : null,

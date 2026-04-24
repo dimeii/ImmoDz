@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import VerifiedBadge from "@/components/agence/VerifiedBadge";
 
 type Wilaya = {
   code: number;
@@ -21,6 +22,7 @@ type Agency = {
   email: string | null;
   address: string | null;
   foundedYear: number | null;
+  kycStatus: "NONE" | "PENDING" | "VERIFIED" | "REJECTED";
   wilaya: { code: number; name: string; nameAr: string | null } | null;
   memberCount: number;
   activeListings: number;
@@ -213,9 +215,14 @@ export default function AgencesContent() {
                         )}
                       </div>
                       <div className="flex-1 min-w-0 pb-1">
-                        <h2 className="font-headline font-bold text-emerald-900 text-xl leading-tight truncate group-hover:text-emerald-700 transition-colors">
-                          {a.name}
-                        </h2>
+                        <div className="flex items-center gap-2">
+                          <h2 className="font-headline font-bold text-emerald-900 text-xl leading-tight truncate group-hover:text-emerald-700 transition-colors">
+                            {a.name}
+                          </h2>
+                          {a.kycStatus === "VERIFIED" && (
+                            <VerifiedBadge size="sm" withLabel={false} />
+                          )}
+                        </div>
                         {a.address && (
                           <p className="text-xs text-emerald-800/60 mt-1 truncate">
                             {a.address}

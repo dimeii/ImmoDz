@@ -34,6 +34,7 @@
 - ✅ **Listing.agencyId** FK directe (onDelete: SetNull) + index — backfillé depuis `AgencyMember`
 - ✅ **User.bio**, `specialtyTypes` (PropertyType[]), `specialtyWilayas` (Int[]) — pour profil agent public
 - ✅ **Listing.rejectionReason / reviewedAt / reviewedBy** — workflow de modération
+- ✅ **Agency.kycStatus / kycDocumentUrl / kycSubmittedAt / kycReviewedAt / kycReviewedBy / kycRejectionReason** + enum `AgencyKycStatus` — vérification registre du commerce
 
 ### Pages publiques
 - ✅ **Homepage** (`/`) — Vue unifiée avec toggle Carte/Liste
@@ -53,6 +54,8 @@
 - ✅ `GET/PUT/DELETE /api/annonces/[id]` — Gestion annonce individuelle
 - ✅ `GET /api/agences` — Annuaire public filtrable (wilaya, recherche nom), compte annonces via FK directe
 - ✅ `POST /api/admin/listings/moderate` — ADMIN only, action approve / reject avec motif (min 3 chars)
+- ✅ `POST /api/agence/kyc` — DIRECTOR only, soumission registre du commerce (Cloudinary signed upload)
+- ✅ `POST /api/admin/agencies/kyc-review` — ADMIN only, approve/reject KYC agence + email Resend au directeur
 - ✅ `POST /api/annonces/[id]/photos` — Upload photos
 - ✅ `GET /api/map/pins` — GeoJSON pour carte (avec clustering coords)
 - ✅ `POST /api/contact` — Envoi email + enregistrement BDD
@@ -78,7 +81,7 @@
 - ✅ **Créer annonce** (`/annonces/nouvelle`) — `ListingForm` complet
 - ✅ **Éditer annonce** (`/annonces/[id]/edit`) — Form pré-remplie + upload photos
 - ✅ **Gestion agence** (`/agence`) — Page agence + sous-page `agents`
-- ✅ **Admin panel** (`/admin`) — Dashboard stats (pending/active/rejected/users/agences) + `/admin/moderation` (file d'attente, approve/reject avec motif)
+- ✅ **Admin panel** (`/admin`) — Dashboard stats (pending/active/rejected/users/agences/KYC) + `/admin/moderation` (file d'attente annonces) + `/admin/kyc` (file d'attente vérification agences avec preview document)
 - ✅ **Profil agent** (`/dashboard/profil`) — Édition avatar, bio, spécialités types + wilayas, téléphone ; lien vers la page publique
 
 ### Fonctionnalités
@@ -122,7 +125,7 @@ Audit stratégique du 2026-04-24 — classé par impact business, pas par comple
 ### 🔴 Bloquant pour ouvrir au public
 1. **Mentions légales, CGU, politique de données** — obligation loi 18-07 algérienne sur la protection des données personnelles. Pages `/mentions-legales`, `/cgu`, `/confidentialite` + bandeau cookies + case d'acceptation à l'inscription.
 2. **Signalement d'annonce** — bouton "Signaler" sur `/annonces/[id]` + modèle `ListingReport` + file de signalements dans `/admin/moderation` (onglet séparé). Indispensable contre les faux / escroqueries.
-3. **KYC agences** — upload registre du commerce (Cloudinary), vérif manuelle par ADMIN, badge "Vérifié" sur fiche agence + listings. Le marché algérien étant saturé de faux agents, c'est LE signal de confiance différenciateur.
+3. ~~**KYC agences**~~ ✅ livré 2026-04-24 — upload registre du commerce (Cloudinary signé), workflow PENDING → VERIFIED / REJECTED depuis `/admin/kyc`, email Resend au directeur, badge "Vérifié" (`VerifiedBadge`) sur cards `/agences`, header `/agences/[slug]`, profil `/agents/[id]` à côté du nom de l'agence.
 
 ### 🟡 Engagement / rétention
 4. **Messagerie interne** (chat client ↔ agent) — modèle `Thread` + `ThreadMessage`, page `/dashboard/messages`, Server-Sent Events ou polling. Aujourd'hui le contact est un email unique → zéro continuité de conversation.

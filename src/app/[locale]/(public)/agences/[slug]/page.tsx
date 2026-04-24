@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import AnnonceCard from "@/components/annonces/AnnonceCard";
+import VerifiedBadge from "@/components/agence/VerifiedBadge";
 
 interface Props {
   params: { slug: string; locale: string };
@@ -81,9 +82,12 @@ export default async function AgencyDetailPage({ params }: Props) {
               )}
             </div>
             <div className="flex-1">
-              <h1 className="text-3xl md:text-4xl font-headline font-bold text-emerald-900 tracking-tight">
-                {agency.name}
-              </h1>
+              <div className="flex flex-wrap items-center gap-3">
+                <h1 className="text-3xl md:text-4xl font-headline font-bold text-emerald-900 tracking-tight">
+                  {agency.name}
+                </h1>
+                {agency.kycStatus === "VERIFIED" && <VerifiedBadge size="md" />}
+              </div>
               <div className="flex flex-wrap gap-3 mt-2 text-sm text-emerald-800/70">
                 {agency.wilaya && (
                   <span>

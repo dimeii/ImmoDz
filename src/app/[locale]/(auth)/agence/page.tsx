@@ -3,6 +3,7 @@ import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import AgenceInfoForm from "@/components/agence/AgenceInfoForm";
+import AgenceKycSection from "@/components/agence/AgenceKycSection";
 import MembreList from "@/components/agence/MembreList";
 
 export default async function AgencePage() {
@@ -71,6 +72,18 @@ export default async function AgencePage() {
           agency={membership.agency}
           memberRole={membership.role as "AGENCY_DIRECTOR" | "AGENCY_EMPLOYEE"}
         />
+
+        {/* KYC */}
+        <div className="mt-8">
+          <AgenceKycSection
+            status={membership.agency.kycStatus}
+            documentUrl={membership.agency.kycDocumentUrl}
+            submittedAt={membership.agency.kycSubmittedAt}
+            reviewedAt={membership.agency.kycReviewedAt}
+            rejectionReason={membership.agency.kycRejectionReason}
+            isDirector={isDirector}
+          />
+        </div>
 
         {/* Membres (lecture seule pour employees) */}
         {!isDirector && (

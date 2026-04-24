@@ -50,6 +50,13 @@ enum RoomCategory {
   OTHER
 }
 
+enum AgencyKycStatus {
+  NONE
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
 // ─── Auth (NextAuth v5) ──────────────────────────────────
 
 model Account {
@@ -156,6 +163,15 @@ model Agency {
   wilayaCode  Int?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  // KYC — vérification registre du commerce
+  kycStatus            AgencyKycStatus @default(NONE)
+  kycDocumentUrl       String?
+  kycDocumentPublicId  String?
+  kycSubmittedAt       DateTime?
+  kycReviewedAt        DateTime?
+  kycReviewedBy        String?
+  kycRejectionReason   String?         @db.Text
 
   wilaya   Wilaya?        @relation(fields: [wilayaCode], references: [code])
   members  AgencyMember[]
