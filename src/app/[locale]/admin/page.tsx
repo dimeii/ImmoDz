@@ -9,14 +9,16 @@ export default async function AdminPage() {
   if (!session?.user?.id) redirect("/login");
   if (role !== "ADMIN") redirect("/");
 
-  const [pending, active, rejected, users, agencies, kycPending] = await Promise.all([
-    db.listing.count({ where: { status: "PENDING" } }),
-    db.listing.count({ where: { status: "ACTIVE" } }),
-    db.listing.count({ where: { status: "REJECTED" } }),
-    db.user.count(),
-    db.agency.count(),
-    db.agency.count({ where: { kycStatus: "PENDING" } }),
-  ]);
+  const [pending, active, rejected, users, agencies, kycPending, reportsPending] =
+    await Promise.all([
+      db.listing.count({ where: { status: "PENDING" } }),
+      db.listing.count({ where: { status: "ACTIVE" } }),
+      db.listing.count({ where: { status: "REJECTED" } }),
+      db.user.count(),
+      db.agency.count(),
+      db.agency.count({ where: { kycStatus: "PENDING" } }),
+      db.listingReport.count({ where: { status: "PENDING" } }),
+    ]);
 
   const cards = [
     {
@@ -34,6 +36,14 @@ export default async function AdminPage() {
       accent: kycPending > 0 ? "bg-yellow-50 border-yellow-200" : "bg-white border-gray-100",
       valueClass: kycPending > 0 ? "text-yellow-700" : "text-gray-900",
       cta: "Vérifier →",
+    },
+    {
+      label: "Signalements",
+      value: reportsPending,
+      href: "/admin/reports",
+      accent: reportsPending > 0 ? "bg-red-50 border-red-200" : "bg-white border-gray-100",
+      valueClass: reportsPending > 0 ? "text-red-700" : "text-gray-900",
+      cta: "Traiter →",
     },
     {
       label: "Annonces actives",
@@ -64,6 +74,14 @@ export default async function AdminPage() {
       accent: "bg-white border-gray-100",
       valueClass: "text-gray-900",
       cta: "Voir →",
+    },
+    {
+      label: "Pages légales",
+      value: "—",
+      href: "/admin/legal",
+      accent: "bg-white border-gray-100",
+      valueClass: "text-gray-700",
+      cta: "Éditer →",
     },
   ];
 

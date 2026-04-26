@@ -1,5 +1,6 @@
 import Navbar from "@/components/ui/Navbar";
 import Footer from "@/components/ui/Footer";
+import CookieBanner from "@/components/legal/CookieBanner";
 
 export default function PublicLayout({
   children,
@@ -11,6 +12,7 @@ export default function PublicLayout({
       <Navbar />
       <div className="pt-20">{children}</div>
       <Footer />
+      <CookieBanner />
     </>
   );
 }

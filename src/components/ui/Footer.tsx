@@ -14,28 +14,22 @@ export default function Footer() {
         </div>
         <div className="flex flex-wrap justify-center gap-8 font-body text-xs uppercase tracking-widest mb-8 md:mb-0">
           <Link
-            href="#"
+            href="/confidentialite"
             className="text-emerald-200/70 hover:text-emerald-50 transition-all underline-offset-4 hover:underline"
           >
             Politique de confidentialite
           </Link>
           <Link
-            href="#"
+            href="/cgu"
             className="text-emerald-200/70 hover:text-emerald-50 transition-all underline-offset-4 hover:underline"
           >
             Conditions d&apos;utilisation
           </Link>
           <Link
-            href="#"
+            href="/mentions-legales"
             className="text-emerald-200/70 hover:text-emerald-50 transition-all underline-offset-4 hover:underline"
           >
-            Cookies
-          </Link>
-          <Link
-            href="#"
-            className="text-emerald-200/70 hover:text-emerald-50 transition-all underline-offset-4 hover:underline"
-          >
-            Accessibilite
+            Mentions legales
           </Link>
         </div>
         <div className="text-emerald-200/70 font-body text-xs uppercase tracking-widest">
