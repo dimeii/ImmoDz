@@ -63,6 +63,22 @@ enum ThreadStatus {
   BLOCKED
 }
 
+enum ReportReason {
+  FAKE
+  PRICE
+  ALREADY_RENTED
+  DUPLICATE
+  INAPPROPRIATE
+  WRONG_LOCATION
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  DISMISSED
+}
+
 // ─── Auth (NextAuth v5) ──────────────────────────────────
 
 model Account {
@@ -150,6 +166,7 @@ model User {
   favorites        Favorite[]
   savedSearches    SavedSearch[]
   passwordResetTokens PasswordResetToken[]
+  reportsFiled     ListingReport[]
   threadsInitiated Thread[]         @relation("ThreadInitiator")
   threadsReceived  Thread[]         @relation("ThreadRecipient")
   threadMessages   ThreadMessage[]
@@ -297,6 +314,7 @@ model Listing {
   favorites       Favorite[]
   threads         Thread[]
   views           ListingView[]
+  reports         ListingReport[]
 
   @@index([status, transactionType, propertyType])
   @@index([wilayaCode])
@@ -369,6 +387,28 @@ model ContactRequest {
   @@map("contact_requests")
 }
 
+// ─── Signalements ────────────────────────────────────────
+
+model ListingReport {
+  id          String       @id @default(cuid())
+  listingId   String
+  reporterId  String?
+  reporterIp  String?
+  reason      ReportReason
+  comment     String?      @db.Text
+  status      ReportStatus @default(PENDING)
+  reviewedAt  DateTime?
+  reviewedBy  String?
+  createdAt   DateTime     @default(now())
+
+  listing  Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  reporter User?   @relation(fields: [reporterId], references: [id], onDelete: SetNull)
+
+  @@index([listingId])
+  @@index([status, createdAt])
+  @@map("listing_reports")
+}
+
 // ─── Threads / Messagerie ────────────────────────────────
 
 model Thread {
@@ -433,4 +473,17 @@ model Quartier {
   @@unique([name, wilayaCode])
   @@index([wilayaCode])
   @@map("quartiers")
+}
+
+// ─── Pages légales ───────────────────────────────────────
+
+model LegalPage {
+  slug      String   @id  // "mentions-legales" | "cgu" | "confidentialite"
+  title     String
+  content   String   @db.Text  // markdown
+  version   Int      @default(1)
+  updatedAt DateTime @updatedAt
+  updatedBy String?
+
+  @@map("legal_pages")
 }

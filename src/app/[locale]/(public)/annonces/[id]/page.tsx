@@ -6,6 +6,7 @@ import LocationMapModal from "@/components/annonces/LocationMapModal";
 import ShareButtons from "@/components/annonces/ShareButtons";
 import FavoriteButton from "@/components/annonces/FavoriteButton";
 import ViewTracker from "@/components/annonces/ViewTracker";
+import ReportButton from "@/components/annonces/ReportButton";
 import CreditSimulator from "@/components/annonces/CreditSimulator";
 import { pricePerSqm, formatPricePerSqm } from "@/lib/price";
 
@@ -344,6 +345,9 @@ export default async function AnnoncePage({
                 acceptsMessages={annonce.user.acceptsMessages}
                 contactPhone={annonce.contactPhone}
               />
+              <div className="mt-4 pt-4 border-t border-outline-variant/20 flex justify-end">
+                <ReportButton listingId={annonce.id} />
+              </div>
             </div>
 
             {/* Agent Profile Card */}

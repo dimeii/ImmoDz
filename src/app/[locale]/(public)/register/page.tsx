@@ -11,12 +11,17 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
+  const [acceptedCgu, setAcceptedCgu] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    if (!acceptedCgu) {
+      setError("Vous devez accepter les CGU et la politique de confidentialité.");
+      return;
+    }
     setLoading(true);
 
     try {
@@ -124,9 +129,38 @@ export default function RegisterPage() {
             <p className="mt-1 text-xs text-gray-500">Minimum 8 caractères</p>
           </div>
 
+          <label className="flex items-start gap-3 text-sm text-gray-700">
+            <input
+              type="checkbox"
+              required
+              checked={acceptedCgu}
+              onChange={(e) => setAcceptedCgu(e.target.checked)}
+              className="mt-0.5 h-4 w-4 accent-primary-950 flex-shrink-0"
+            />
+            <span>
+              J&apos;accepte les{" "}
+              <Link
+                href="/cgu"
+                target="_blank"
+                className="font-medium text-primary-600 hover:underline"
+              >
+                conditions générales d&apos;utilisation
+              </Link>{" "}
+              et la{" "}
+              <Link
+                href="/confidentialite"
+                target="_blank"
+                className="font-medium text-primary-600 hover:underline"
+              >
+                politique de confidentialité
+              </Link>
+              .
+            </span>
+          </label>
+
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !acceptedCgu}
             className="w-full rounded-md bg-primary-600 px-4 py-2 text-white hover:bg-primary-700 disabled:opacity-50"
           >
             {loading ? "Inscription..." : "S'inscrire"}
