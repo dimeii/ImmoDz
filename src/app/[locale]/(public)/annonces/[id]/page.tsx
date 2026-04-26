@@ -48,7 +48,7 @@ export default async function AnnoncePage({
     include: {
       wilaya: true,
       photos: { orderBy: { order: "asc" } },
-      user: { select: { id: true, name: true, image: true } },
+      user: { select: { id: true, name: true, image: true, acceptsMessages: true } },
     },
   });
 
@@ -339,7 +339,11 @@ export default async function AnnoncePage({
               <h3 className="text-2xl font-headline font-extrabold text-primary mb-6 leading-tight">
                 Intéressé par ce bien ?
               </h3>
-              <ContactForm listingId={annonce.id} />
+              <ContactForm
+                listingId={annonce.id}
+                acceptsMessages={annonce.user.acceptsMessages}
+                contactPhone={annonce.contactPhone}
+              />
             </div>
 
             {/* Agent Profile Card */}

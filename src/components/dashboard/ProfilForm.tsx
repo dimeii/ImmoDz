@@ -35,6 +35,7 @@ interface Props {
     bio: string | null;
     specialtyTypes: PropertyType[];
     specialtyWilayas: number[];
+    acceptsMessages: boolean;
   };
   wilayas: { code: number; name: string }[];
 }
@@ -50,6 +51,7 @@ export default function ProfilForm({ initial, wilayas }: Props) {
   const [specialtyWilayas, setSpecialtyWilayas] = useState<number[]>(
     initial.specialtyWilayas
   );
+  const [acceptsMessages, setAcceptsMessages] = useState(initial.acceptsMessages);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -82,6 +84,7 @@ export default function ProfilForm({ initial, wilayas }: Props) {
           image: image ?? "",
           specialtyTypes,
           specialtyWilayas,
+          acceptsMessages,
         }),
       });
       if (!res.ok) {
@@ -227,6 +230,27 @@ export default function ProfilForm({ initial, wilayas }: Props) {
             </p>
           )}
         </div>
+      </div>
+
+      <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-md">
+        <h2 className="text-xl font-bold text-gray-900 mb-5">Préférences de contact</h2>
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={acceptsMessages}
+            onChange={(e) => setAcceptsMessages(e.target.checked)}
+            className="mt-1 h-5 w-5 accent-primary-950"
+          />
+          <span className="flex-1">
+            <span className="block font-semibold text-gray-900">
+              Accepter les messages via la messagerie ImmoDz
+            </span>
+            <span className="block text-sm text-gray-500 mt-0.5">
+              Si désactivé, le formulaire de contact sera caché sur vos annonces et les utilisateurs
+              devront vous joindre via le numéro de téléphone affiché.
+            </span>
+          </span>
+        </label>
       </div>
 
       <div className="flex justify-end">

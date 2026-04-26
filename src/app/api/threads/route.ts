@@ -84,7 +84,13 @@ export async function POST(request: NextRequest) {
 
     const listing = await db.listing.findUnique({
       where: { id: listingId },
-      select: { id: true, userId: true, status: true, title: true },
+      select: {
+        id: true,
+        userId: true,
+        status: true,
+        title: true,
+        user: { select: { acceptsMessages: true } },
+      },
     });
 
     if (!listing || listing.status !== "ACTIVE") {
@@ -95,6 +101,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: "Vous ne pouvez pas vous contacter vous-même" },
         { status: 400 }
+      );
+    }
+
+    if (!listing.user.acceptsMessages) {
+      return NextResponse.json(
+        { error: "Cet annonceur n'accepte pas les messages via ImmoDz." },
+        { status: 403 }
       );
     }
 

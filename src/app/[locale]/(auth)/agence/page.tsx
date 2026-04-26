@@ -58,12 +58,20 @@ export default async function AgencePage() {
             Informations
           </Link>
           {isDirector && (
-            <Link
-              href="/agence/agents"
-              className="px-4 py-2 font-semibold text-gray-500 hover:text-gray-700 border-b-2 border-transparent"
-            >
-              Agents
-            </Link>
+            <>
+              <Link
+                href="/agence/agents"
+                className="px-4 py-2 font-semibold text-gray-500 hover:text-gray-700 border-b-2 border-transparent"
+              >
+                Agents
+              </Link>
+              <Link
+                href="/agence/stats"
+                className="px-4 py-2 font-semibold text-gray-500 hover:text-gray-700 border-b-2 border-transparent"
+              >
+                Statistiques
+              </Link>
+            </>
           )}
         </div>
 
