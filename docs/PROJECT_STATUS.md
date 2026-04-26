@@ -126,7 +126,7 @@ Audit stratégique du 2026-04-24 — classé par impact business, pas par comple
 1. **Mentions légales, CGU, politique de données** — obligation loi 18-07 algérienne sur la protection des données personnelles. Pages `/mentions-legales`, `/cgu`, `/confidentialite` + bandeau cookies + case d'acceptation à l'inscription.
 2. **Signalement d'annonce** — bouton "Signaler" sur `/annonces/[id]` + modèle `ListingReport` + file de signalements dans `/admin/moderation` (onglet séparé). Indispensable contre les faux / escroqueries.
 3. ~~**KYC agences**~~ ✅ livré 2026-04-24 — upload registre du commerce (Cloudinary signé), workflow PENDING → VERIFIED / REJECTED depuis `/admin/kyc`, email Resend au directeur, badge "Vérifié" (`VerifiedBadge`) sur cards `/agences`, header `/agences/[slug]`, profil `/agents/[id]` à côté du nom de l'agence.
-3b. **Mot de passe oublié** — parcours `/mot-de-passe-oublie` (saisie email) → email Resend avec lien `/reinitialisation/[token]` → nouvelle page de saisie. Modèle `PasswordResetToken` (token, userId, expiresAt). Aujourd'hui un user qui oublie son mdp est définitivement bloqué — feature standard attendue.
+3b. ~~**Mot de passe oublié**~~ ✅ livré 2026-04-26 — `/mot-de-passe-oublie` (saisie email, anti énumération de comptes) → email Resend avec lien valide 60 min → `/reinitialisation/[token]` (nouveau mdp + confirmation, min 8 chars). Modèle `PasswordResetToken` (tokenHash SHA-256, userId, expiresAt, usedAt) — token usé invalide tous les autres en attente du même user. Lien "Mot de passe oublié ?" sur `/login`.
 
 ### 🟡 Engagement / rétention
 4. ~~**Messagerie interne**~~ ✅ livré 2026-04-26 (Phase 1) — modèles `Thread` + `ThreadMessage`, page `/dashboard/messages`, polling SWR 10-15s, badge non-lus navbar, bouton WhatsApp dans la conversation, email Resend si message non lu après 5 min (cron `/api/cron/notify-unread`). Voir `docs/MESSAGERIE.md` pour l'architecture (phasage Polling → Pusher → Soketi).
@@ -139,7 +139,7 @@ Audit stratégique du 2026-04-24 — classé par impact business, pas par comple
 9. **Abonnements agences** (freemium Stripe / CIB) — limite d'annonces actives par plan, champ `Agency.plan` + hooks de limite dans `POST /api/annonces`.
 10. **Boost d'annonce** payant — champ `Listing.boostedUntil DateTime?`, tri prioritaire côté `/recherche` et `/api/map/pins` pour les listings boostés actifs.
 11. **Analytics détaillées par annonce** — sources (referrer), heatmap de vues par wilaya, graph 30 jours. Justifie le plan premium.
-11b. **Stats agrégées par agent et par agence** — modèle `ListingView` (listingId, viewedAt, sessionHash, referrer) en append-only, dashboards `/agence/stats` et `/agents/[id]/stats` avec courbes 7j/30j, top annonces, taux de contact. Brique de base pour #9 (abonnements premium) et fournit aussi de la data pour le scoring interne des agences.
+11b. ~~**Stats agrégées par agent et par agence**~~ ✅ livré 2026-04-26 — modèle `ListingView` (append-only, listingId + viewedAt + referrer) alimenté par l'endpoint `/api/annonces/[id]/view` existant. Pages `/dashboard/stats` (toutes annonces de l'utilisateur) et `/agence/stats` (DIRECTOR only, breakdown par agent). Tuiles totaux 30j + total all-time, taux de conversion vues→contacts, courbe SVG sur 30 jours (vues + contacts), top 5 annonces. Helper `aggregateListingStats` réutilisable. Endpoints `/api/stats/agent` et `/api/stats/agence`.
 
 ### 🔵 Produit premium (différenciation)
 12. **Avis / ratings agences** — modèle `AgencyReview` (rating 1-5 + commentaire), réponse publique de l'agence, affichage sur fiche.
@@ -157,7 +157,7 @@ Audit stratégique du 2026-04-24 — classé par impact business, pas par comple
 22. **Drag-and-drop ordering photos** dans le formulaire annonce.
 23. **`Agency.slug` NOT NULL** — aujourd'hui nullable, toutes les rows ont un slug, migration follow-up safe.
 24. **Typage strict `session.user.role`** — actuellement cast via `as { role?: string }` partout.
-25. **Opt-out messagerie pour agents** — champ `User.acceptsMessages Boolean @default(true)` (ou `Agency.acceptsMessages` au niveau agence), toggle dans `/dashboard/profil` et `/agence`. Si `false`, le `ContactForm` cache le bouton et affiche "Cet annonceur ne souhaite pas être contacté via la messagerie ImmoDz — utilisez son numéro affiché". Évite les agents qui sortent de la plateforme et veulent juste être joignables au téléphone.
+25. ~~**Opt-out messagerie pour agents**~~ ✅ livré 2026-04-26 — champ `User.acceptsMessages Boolean @default(true)`, toggle dans `/dashboard/profil` (section "Préférences de contact"). Si `false`, le `ContactForm` cache le formulaire et affiche un message renvoyant vers le numéro de téléphone. `POST /api/threads` rejette en 403 ("Cet annonceur n'accepte pas les messages via ImmoDz").
 
 ### Triangle recommandé
 Si on attaque plus tard : **#3 KYC + badge vérifié** (différenciation immédiate) → **#4 messagerie interne** (engagement) → **#6 SEO pages wilaya** (acquisition gratuite). C'est le triangle trust / engagement / acquisition qui fait passer d'un MVP à une vraie plateforme.

@@ -19,6 +19,7 @@ export default async function DashboardProfilPage() {
       role: true,
       specialtyTypes: true,
       specialtyWilayas: true,
+      acceptsMessages: true,
     },
   });
 
@@ -72,6 +73,7 @@ export default async function DashboardProfilPage() {
             bio: user.bio,
             specialtyTypes: user.specialtyTypes,
             specialtyWilayas: user.specialtyWilayas,
+            acceptsMessages: user.acceptsMessages,
           }}
           wilayas={wilayas}
         />

@@ -91,6 +91,15 @@ function LoginForm() {
             {loading ? "Connexion..." : "Se connecter"}
           </button>
 
+          <p className="text-center text-sm">
+            <Link
+              href="/mot-de-passe-oublie"
+              className="font-medium text-primary-600 hover:text-primary-500"
+            >
+              Mot de passe oublié ?
+            </Link>
+          </p>
+
           <p className="text-center text-sm text-gray-600">
             Pas encore de compte ?{" "}
             <Link href="/register" className="font-medium text-primary-600 hover:text-primary-500">

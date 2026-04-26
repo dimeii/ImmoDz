@@ -7,9 +7,15 @@ import { Link } from "@/i18n/navigation";
 
 interface ContactFormProps {
   listingId: string;
+  acceptsMessages?: boolean;
+  contactPhone?: string | null;
 }
 
-export default function ContactForm({ listingId }: ContactFormProps) {
+export default function ContactForm({
+  listingId,
+  acceptsMessages = true,
+  contactPhone,
+}: ContactFormProps) {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [message, setMessage] = useState("");
@@ -18,6 +24,24 @@ export default function ContactForm({ listingId }: ContactFormProps) {
 
   if (status === "loading") {
     return <div className="text-sm text-on-surface-variant">Chargement…</div>;
+  }
+
+  if (!acceptsMessages) {
+    return (
+      <div className="space-y-3 text-center">
+        <div className="rounded-lg bg-amber-50 p-4 text-sm text-amber-800">
+          Cet annonceur ne souhaite pas être contacté via la messagerie ImmoDz.
+          {contactPhone && (
+            <>
+              <br />
+              <span className="font-semibold">
+                Utilisez son numéro affiché : {contactPhone}
+              </span>
+            </>
+          )}
+        </div>
+      </div>
+    );
   }
 
   if (!session?.user) {

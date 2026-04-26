@@ -104,6 +104,21 @@ model VerificationToken {
   @@map("verification_tokens")
 }
 
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
+}
+
 // ─── Users ───────────────────────────────────────────────
 
 model User {
@@ -123,6 +138,9 @@ model User {
   specialtyTypes   PropertyType[] @default([])
   specialtyWilayas Int[]          @default([])
 
+  // Préférences messagerie
+  acceptsMessages  Boolean @default(true)
+
   accounts         Account[]
   sessions         Session[]
   listings         Listing[]
@@ -131,6 +149,7 @@ model User {
   contactsReceived ContactRequest[] @relation("ContactReceiver")
   favorites        Favorite[]
   savedSearches    SavedSearch[]
+  passwordResetTokens PasswordResetToken[]
   threadsInitiated Thread[]         @relation("ThreadInitiator")
   threadsReceived  Thread[]         @relation("ThreadRecipient")
   threadMessages   ThreadMessage[]
@@ -277,6 +296,7 @@ model Listing {
   contactRequests ContactRequest[]
   favorites       Favorite[]
   threads         Thread[]
+  views           ListingView[]
 
   @@index([status, transactionType, propertyType])
   @@index([wilayaCode])
@@ -314,6 +334,21 @@ model ListingPhoto {
 
   @@index([listingId, order])
   @@map("listing_photos")
+}
+
+// ─── Stats / Analytics ───────────────────────────────────
+
+model ListingView {
+  id        String   @id @default(cuid())
+  listingId String
+  viewedAt  DateTime @default(now())
+  referrer  String?
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([listingId, viewedAt])
+  @@index([viewedAt])
+  @@map("listing_views")
 }
 
 // ─── Contact ─────────────────────────────────────────────

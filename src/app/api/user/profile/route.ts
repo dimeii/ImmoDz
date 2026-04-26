@@ -24,6 +24,7 @@ const updateProfileSchema = z.object({
   specialtyWilayas: z
     .array(z.coerce.number().int().min(1).max(58))
     .optional(),
+  acceptsMessages: z.boolean().optional(),
 });
 
 export async function PATCH(request: NextRequest) {
@@ -45,6 +46,8 @@ export async function PATCH(request: NextRequest) {
       data.specialtyTypes = validated.specialtyTypes;
     if (validated.specialtyWilayas !== undefined)
       data.specialtyWilayas = validated.specialtyWilayas;
+    if (validated.acceptsMessages !== undefined)
+      data.acceptsMessages = validated.acceptsMessages;
 
     const updated = await db.user.update({
       where: { id: session.user.id },
