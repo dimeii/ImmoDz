@@ -1,43 +1,59 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { Link } from "@/i18n/navigation";
 
 interface ContactFormProps {
   listingId: string;
 }
 
 export default function ContactForm({ listingId }: ContactFormProps) {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  const [sent, setSent] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  if (status === "loading") {
+    return <div className="text-sm text-on-surface-variant">Chargement…</div>;
+  }
+
+  if (!session?.user) {
+    return (
+      <div className="space-y-3 text-center">
+        <p className="text-sm text-on-surface-variant">
+          Connectez-vous pour contacter l'annonceur et garder une trace de la conversation.
+        </p>
+        <Link
+          href={`/login?callbackUrl=/annonces/${listingId}#contact`}
+          className="inline-block w-full bg-primary text-on-primary font-headline font-bold py-4 rounded-lg hover:bg-primary-container transition-all shadow-lg shadow-emerald-900/20"
+        >
+          Se connecter
+        </Link>
+      </div>
+    );
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!message.trim() || loading) return;
     setLoading(true);
+    setError(null);
 
     try {
-      const res = await fetch("/api/contact", {
+      const res = await fetch("/api/threads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ listingId, name, email, message, phone }),
+        body: JSON.stringify({ listingId, body: message.trim() }),
       });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erreur lors de l'envoi");
 
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Erreur lors de l'envoi");
-      }
-
-      setName("");
-      setEmail("");
-      setPhone("");
-      setMessage("");
-      setSent(true);
-      setTimeout(() => setSent(false), 4000);
+      router.push("/dashboard/messages");
     } catch (err) {
-      console.error(err);
+      setError(err instanceof Error ? err.message : "Erreur lors de l'envoi");
     } finally {
       setLoading(false);
     }
@@ -45,72 +61,42 @@ export default function ContactForm({ listingId }: ContactFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4" id="contact">
-      {sent && (
-        <div className="bg-primary-fixed/30 text-primary rounded-lg p-3 text-sm font-medium text-center">
-          Message envoyé avec succès !
+      {error && (
+        <div className="bg-red-50 text-red-700 rounded-lg p-3 text-sm font-medium text-center">
+          {error}
         </div>
       )}
       <div>
         <label className="block text-sm font-semibold text-on-surface-variant mb-2">
-          Nom Complet
-        </label>
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Votre nom"
-          className="w-full bg-surface-container-low border-none rounded-lg p-3 text-on-surface focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-on-surface-variant/40"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-semibold text-on-surface-variant mb-2">
-          Email
-        </label>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="votre@email.com"
-          className="w-full bg-surface-container-low border-none rounded-lg p-3 text-on-surface focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-on-surface-variant/40"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-semibold text-on-surface-variant mb-2">
-          Téléphone
-        </label>
-        <input
-          type="tel"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          placeholder="05XX XX XX XX"
-          className="w-full bg-surface-container-low border-none rounded-lg p-3 text-on-surface focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-on-surface-variant/40"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-semibold text-on-surface-variant mb-2">
-          Message
+          Votre message
         </label>
         <textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           required
-          rows={3}
-          placeholder="Bonjour, je suis intéressé par ce bien..."
+          rows={4}
+          maxLength={5000}
+          minLength={10}
+          placeholder="Bonjour, je suis intéressé par ce bien. Pourrions-nous convenir d'une visite ?"
           className="w-full bg-surface-container-low border-none rounded-lg p-3 text-on-surface focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-on-surface-variant/40 resize-none"
         />
+        <p className="text-xs text-on-surface-variant/70 mt-1.5">
+          {message.trim().length < 10
+            ? `Encore ${10 - message.trim().length} caractère${10 - message.trim().length > 1 ? "s" : ""} minimum`
+            : `${message.trim().length} / 5000 caractères`}
+        </p>
       </div>
       <div className="pt-2">
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || message.trim().length < 10}
           className="w-full bg-primary text-on-primary font-headline font-bold py-4 rounded-lg hover:bg-primary-container transition-all shadow-lg shadow-emerald-900/20 active:scale-[0.99] disabled:opacity-50"
         >
-          {loading ? "Envoi..." : "Demander une visite"}
+          {loading ? "Envoi…" : "Envoyer le message"}
         </button>
       </div>
       <p className="text-[10px] text-center text-on-surface-variant leading-relaxed">
-        En envoyant ce formulaire, vous acceptez nos conditions générales et
-        notre politique de confidentialité.
+        En envoyant ce formulaire, vous acceptez nos conditions générales et notre politique de confidentialité.
       </p>
     </form>
   );

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import AnnonceCard from "@/components/annonces/AnnonceCard";
+import VerifiedBadge from "@/components/agence/VerifiedBadge";
 
 interface Props {
   params: { id: string; locale: string };
@@ -46,7 +47,7 @@ export default async function AgentProfilePage({ params }: Props) {
       agencyMembers: {
         include: {
           agency: {
-            select: { id: true, slug: true, name: true, logo: true },
+            select: { id: true, slug: true, name: true, logo: true, kycStatus: true },
           },
         },
         take: 1,
@@ -130,8 +131,11 @@ export default async function AgentProfilePage({ params }: Props) {
                       </span>
                     )}
                   </div>
-                  <span className="text-sm font-semibold text-emerald-900">
+                  <span className="text-sm font-semibold text-emerald-900 flex items-center gap-1.5">
                     {membership.agency.name}
+                    {membership.agency.kycStatus === "VERIFIED" && (
+                      <VerifiedBadge size="sm" withLabel={false} />
+                    )}
                   </span>
                 </Link>
               )}

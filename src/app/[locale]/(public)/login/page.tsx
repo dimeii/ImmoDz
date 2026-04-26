@@ -2,11 +2,12 @@
 
 import { signIn } from "next-auth/react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 
-export default function LoginPage() {
-  const router = useRouter();
+function LoginForm() {
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -24,15 +25,17 @@ export default function LoginPage() {
         redirect: false,
       });
 
-      if (result?.error) {
+      if (result?.error || !result?.ok) {
         setError("Email ou mot de passe incorrect");
-      } else {
-        router.push("/dashboard");
-        router.refresh();
+        setLoading(false);
+        return;
       }
+
+      // Hard navigation : assure que le cookie JWT est envoyé au middleware
+      // (router.push() peut arriver avant la propagation du Set-Cookie)
+      window.location.href = callbackUrl;
     } catch {
       setError("Une erreur est survenue");
-    } finally {
       setLoading(false);
     }
   }
@@ -97,5 +100,13 @@ export default function LoginPage() {
         </form>
       </div>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
   );
 }

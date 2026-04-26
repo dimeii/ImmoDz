@@ -50,6 +50,19 @@ enum RoomCategory {
   OTHER
 }
 
+enum AgencyKycStatus {
+  NONE
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum ThreadStatus {
+  ACTIVE
+  ARCHIVED
+  BLOCKED
+}
+
 // ─── Auth (NextAuth v5) ──────────────────────────────────
 
 model Account {
@@ -118,6 +131,9 @@ model User {
   contactsReceived ContactRequest[] @relation("ContactReceiver")
   favorites        Favorite[]
   savedSearches    SavedSearch[]
+  threadsInitiated Thread[]         @relation("ThreadInitiator")
+  threadsReceived  Thread[]         @relation("ThreadRecipient")
+  threadMessages   ThreadMessage[]
 
   @@map("users")
 }
@@ -156,6 +172,15 @@ model Agency {
   wilayaCode  Int?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  // KYC — vérification registre du commerce
+  kycStatus            AgencyKycStatus @default(NONE)
+  kycDocumentUrl       String?
+  kycDocumentPublicId  String?
+  kycSubmittedAt       DateTime?
+  kycReviewedAt        DateTime?
+  kycReviewedBy        String?
+  kycRejectionReason   String?         @db.Text
 
   wilaya   Wilaya?        @relation(fields: [wilayaCode], references: [code])
   members  AgencyMember[]
@@ -251,6 +276,7 @@ model Listing {
   photos          ListingPhoto[]
   contactRequests ContactRequest[]
   favorites       Favorite[]
+  threads         Thread[]
 
   @@index([status, transactionType, propertyType])
   @@index([wilayaCode])
@@ -306,6 +332,47 @@ model ContactRequest {
   receiver User    @relation("ContactReceiver", fields: [receiverId], references: [id])
 
   @@map("contact_requests")
+}
+
+// ─── Threads / Messagerie ────────────────────────────────
+
+model Thread {
+  id                String       @id @default(cuid())
+  listingId         String?
+  initiatorId       String
+  recipientId       String
+  lastMessageAt     DateTime     @default(now())
+  unreadByInitiator Boolean      @default(false)
+  unreadByRecipient Boolean      @default(true)
+  status            ThreadStatus @default(ACTIVE)
+  createdAt         DateTime     @default(now())
+
+  listing   Listing?        @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  initiator User            @relation("ThreadInitiator", fields: [initiatorId], references: [id], onDelete: Cascade)
+  recipient User            @relation("ThreadRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  messages  ThreadMessage[]
+
+  @@unique([listingId, initiatorId, recipientId])
+  @@index([initiatorId, lastMessageAt])
+  @@index([recipientId, lastMessageAt])
+  @@map("threads")
+}
+
+model ThreadMessage {
+  id         String    @id @default(cuid())
+  threadId   String
+  senderId   String
+  body       String    @db.Text
+  readAt     DateTime?
+  notifiedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  thread Thread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  sender User   @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([threadId, createdAt])
+  @@index([notifiedAt, readAt])
+  @@map("thread_messages")
 }
 
 // ─── Référence ───────────────────────────────────────────

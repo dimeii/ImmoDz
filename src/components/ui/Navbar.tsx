@@ -5,6 +5,7 @@ import { useEffect, useState, useRef, Suspense } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import LocaleSwitcher from "@/components/ui/LocaleSwitcher";
+import UnreadBadge from "@/components/messages/UnreadBadge";
 
 export default function Navbar() {
   const { data: session } = useSession();
@@ -80,6 +81,7 @@ export default function Navbar() {
           </Suspense>
           {session ? (
             <>
+              <UnreadBadge />
               <Link
                 href="/dashboard"
                 className="hidden md:inline text-sm font-medium text-emerald-800/60 hover:text-emerald-900 transition-colors"

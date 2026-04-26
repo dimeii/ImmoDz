@@ -34,6 +34,7 @@
 - ✅ **Listing.agencyId** FK directe (onDelete: SetNull) + index — backfillé depuis `AgencyMember`
 - ✅ **User.bio**, `specialtyTypes` (PropertyType[]), `specialtyWilayas` (Int[]) — pour profil agent public
 - ✅ **Listing.rejectionReason / reviewedAt / reviewedBy** — workflow de modération
+- ✅ **Agency.kycStatus / kycDocumentUrl / kycSubmittedAt / kycReviewedAt / kycReviewedBy / kycRejectionReason** + enum `AgencyKycStatus` — vérification registre du commerce
 
 ### Pages publiques
 - ✅ **Homepage** (`/`) — Vue unifiée avec toggle Carte/Liste
@@ -42,7 +43,7 @@
   - **Vue Liste** — Grille d'annonces avec pagination
   - Filtres temps réel, cache Redis (60s)
 - ✅ **Fiche annonce** (`/annonces/[id]`) — Détails complets + photos + formulaire contact
-- ✅ **Annuaire agences** (`/agences`) — Grille filtrable (wilaya + recherche nom), cards cliquables vers fiche
+- ✅ **Annuaire agences** (`/agences`) — Grille 2 cols filtrable (wilaya + recherche nom), cards larges avec **cover image + logo superposé** (style carte de visite), badges wilaya/année, stats en gros chiffres, icônes contact
 - ✅ **Fiche agence** (`/agences/[slug]`) — Header (logo/cover/contact/web), description, équipe cliquable, annonces actives via FK
 - ✅ **Profil agent** (`/agents/[id]`) — Photo/nom, agence rattachée, bio, spécialités (types + wilayas), annonces actives. 404 pour USER basique (réservé AGENCY_*/ADMIN)
 - ✅ **Login** (`/login`) — Credentials auth
@@ -53,6 +54,8 @@
 - ✅ `GET/PUT/DELETE /api/annonces/[id]` — Gestion annonce individuelle
 - ✅ `GET /api/agences` — Annuaire public filtrable (wilaya, recherche nom), compte annonces via FK directe
 - ✅ `POST /api/admin/listings/moderate` — ADMIN only, action approve / reject avec motif (min 3 chars)
+- ✅ `POST /api/agence/kyc` — DIRECTOR only, soumission registre du commerce (Cloudinary signed upload)
+- ✅ `POST /api/admin/agencies/kyc-review` — ADMIN only, approve/reject KYC agence + email Resend au directeur
 - ✅ `POST /api/annonces/[id]/photos` — Upload photos
 - ✅ `GET /api/map/pins` — GeoJSON pour carte (avec clustering coords)
 - ✅ `POST /api/contact` — Envoi email + enregistrement BDD
@@ -78,7 +81,7 @@
 - ✅ **Créer annonce** (`/annonces/nouvelle`) — `ListingForm` complet
 - ✅ **Éditer annonce** (`/annonces/[id]/edit`) — Form pré-remplie + upload photos
 - ✅ **Gestion agence** (`/agence`) — Page agence + sous-page `agents`
-- ✅ **Admin panel** (`/admin`) — Dashboard stats (pending/active/rejected/users/agences) + `/admin/moderation` (file d'attente, approve/reject avec motif)
+- ✅ **Admin panel** (`/admin`) — Dashboard stats (pending/active/rejected/users/agences/KYC) + `/admin/moderation` (file d'attente annonces) + `/admin/kyc` (file d'attente vérification agences avec preview document)
 - ✅ **Profil agent** (`/dashboard/profil`) — Édition avatar, bio, spécialités types + wilayas, téléphone ; lien vers la page publique
 
 ### Fonctionnalités
@@ -112,6 +115,52 @@
 - ✅ Scraper OuedKniss + import scraped listings
 - ✅ Lightbox photos, filtrage carte par agent, modal carte sur fiche annonce
 - ✅ `PhotoUploadSection` avec catégories de pièces
+
+---
+
+## 🗺️ Roadmap produit (à attaquer plus tard)
+
+Audit stratégique du 2026-04-24 — classé par impact business, pas par complexité technique.
+
+### 🔴 Bloquant pour ouvrir au public
+1. **Mentions légales, CGU, politique de données** — obligation loi 18-07 algérienne sur la protection des données personnelles. Pages `/mentions-legales`, `/cgu`, `/confidentialite` + bandeau cookies + case d'acceptation à l'inscription.
+2. **Signalement d'annonce** — bouton "Signaler" sur `/annonces/[id]` + modèle `ListingReport` + file de signalements dans `/admin/moderation` (onglet séparé). Indispensable contre les faux / escroqueries.
+3. ~~**KYC agences**~~ ✅ livré 2026-04-24 — upload registre du commerce (Cloudinary signé), workflow PENDING → VERIFIED / REJECTED depuis `/admin/kyc`, email Resend au directeur, badge "Vérifié" (`VerifiedBadge`) sur cards `/agences`, header `/agences/[slug]`, profil `/agents/[id]` à côté du nom de l'agence.
+3b. **Mot de passe oublié** — parcours `/mot-de-passe-oublie` (saisie email) → email Resend avec lien `/reinitialisation/[token]` → nouvelle page de saisie. Modèle `PasswordResetToken` (token, userId, expiresAt). Aujourd'hui un user qui oublie son mdp est définitivement bloqué — feature standard attendue.
+
+### 🟡 Engagement / rétention
+4. ~~**Messagerie interne**~~ ✅ livré 2026-04-26 (Phase 1) — modèles `Thread` + `ThreadMessage`, page `/dashboard/messages`, polling SWR 10-15s, badge non-lus navbar, bouton WhatsApp dans la conversation, email Resend si message non lu après 5 min (cron `/api/cron/notify-unread`). Voir `docs/MESSAGERIE.md` pour l'architecture (phasage Polling → Pusher → Soketi).
+5. **Alertes WhatsApp** via WhatsApp Business API (complément d'Email `SavedSearch`). En Algérie 90 % des transactions immo passent par WhatsApp — killer feature pour le marché local.
+6. **SEO par wilaya × type** — pages statiques indexables `/location-appartement-alger`, `/vente-villa-oran`, `/location-studio-oran-bir-el-djir`. Aujourd'hui `/recherche?...` = zéro SEO. Générer via `generateStaticParams` croisé wilayas × types × transaction.
+7. **Sitemap.xml dynamique** + `robots.txt` configurés + Open Graph / Twitter cards sur fiches annonce et fiches agence.
+8. **Prise de RDV intégrée** (slot picker type calendly). Le formulaire de contact convertit 5× moins qu'un créneau cliquable. Modèle `Appointment` + UI sur fiche annonce.
+
+### 🟢 Monétisation
+9. **Abonnements agences** (freemium Stripe / CIB) — limite d'annonces actives par plan, champ `Agency.plan` + hooks de limite dans `POST /api/annonces`.
+10. **Boost d'annonce** payant — champ `Listing.boostedUntil DateTime?`, tri prioritaire côté `/recherche` et `/api/map/pins` pour les listings boostés actifs.
+11. **Analytics détaillées par annonce** — sources (referrer), heatmap de vues par wilaya, graph 30 jours. Justifie le plan premium.
+11b. **Stats agrégées par agent et par agence** — modèle `ListingView` (listingId, viewedAt, sessionHash, referrer) en append-only, dashboards `/agence/stats` et `/agents/[id]/stats` avec courbes 7j/30j, top annonces, taux de contact. Brique de base pour #9 (abonnements premium) et fournit aussi de la data pour le scoring interne des agences.
+
+### 🔵 Produit premium (différenciation)
+12. **Avis / ratings agences** — modèle `AgencyReview` (rating 1-5 + commentaire), réponse publique de l'agence, affichage sur fiche.
+13. **Score quartier** — écoles proches, commerces, transport, sécurité. Données depuis OSM overpass + scraping éducation/transport. Gros SEO longue traîne.
+14. **Visite virtuelle / plan 3D** — intégration Matterport ou upload vidéo 360° (Cloudinary). Indispensable pour le haut de gamme.
+15. **Comparateur** (2-3 annonces côte à côte) — prix/m², équipements, pièces, wilaya.
+16. **Historique de prix** — tracker baisses de prix + durée en ligne (champ `priceHistory Json[]`).
+
+### ⚫ Technique / opérationnel
+17. **Tests** (Vitest + Playwright) — 0 aujourd'hui.
+18. **Sentry** ou équivalent — observabilité erreurs prod, absent.
+19. **Backups BDD** — vérifier la politique Railway, ajouter dump auto sur S3/R2 si pas suffisant.
+20. **i18n phase 4** — extraction des strings des ~47 `.tsx` restants (Footer, forms, cards, dashboard, simulateur, filtres).
+21. **Re-modération sur édition** d'annonce ACTIVE (aujourd'hui les edits passent direct sans review).
+22. **Drag-and-drop ordering photos** dans le formulaire annonce.
+23. **`Agency.slug` NOT NULL** — aujourd'hui nullable, toutes les rows ont un slug, migration follow-up safe.
+24. **Typage strict `session.user.role`** — actuellement cast via `as { role?: string }` partout.
+25. **Opt-out messagerie pour agents** — champ `User.acceptsMessages Boolean @default(true)` (ou `Agency.acceptsMessages` au niveau agence), toggle dans `/dashboard/profil` et `/agence`. Si `false`, le `ContactForm` cache le bouton et affiche "Cet annonceur ne souhaite pas être contacté via la messagerie ImmoDz — utilisez son numéro affiché". Évite les agents qui sortent de la plateforme et veulent juste être joignables au téléphone.
+
+### Triangle recommandé
+Si on attaque plus tard : **#3 KYC + badge vérifié** (différenciation immédiate) → **#4 messagerie interne** (engagement) → **#6 SEO pages wilaya** (acquisition gratuite). C'est le triangle trust / engagement / acquisition qui fait passer d'un MVP à une vraie plateforme.
 
 ---
 

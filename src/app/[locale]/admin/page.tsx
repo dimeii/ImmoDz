@@ -9,12 +9,13 @@ export default async function AdminPage() {
   if (!session?.user?.id) redirect("/login");
   if (role !== "ADMIN") redirect("/");
 
-  const [pending, active, rejected, users, agencies] = await Promise.all([
+  const [pending, active, rejected, users, agencies, kycPending] = await Promise.all([
     db.listing.count({ where: { status: "PENDING" } }),
     db.listing.count({ where: { status: "ACTIVE" } }),
     db.listing.count({ where: { status: "REJECTED" } }),
     db.user.count(),
     db.agency.count(),
+    db.agency.count({ where: { kycStatus: "PENDING" } }),
   ]);
 
   const cards = [
@@ -25,6 +26,14 @@ export default async function AdminPage() {
       accent: pending > 0 ? "bg-yellow-50 border-yellow-200" : "bg-white border-gray-100",
       valueClass: pending > 0 ? "text-yellow-700" : "text-gray-900",
       cta: "Modérer →",
+    },
+    {
+      label: "KYC en attente",
+      value: kycPending,
+      href: "/admin/kyc",
+      accent: kycPending > 0 ? "bg-yellow-50 border-yellow-200" : "bg-white border-gray-100",
+      valueClass: kycPending > 0 ? "text-yellow-700" : "text-gray-900",
+      cta: "Vérifier →",
     },
     {
       label: "Annonces actives",
@@ -66,7 +75,7 @@ export default async function AdminPage() {
           <p className="text-gray-500 mt-1">Back-office ImmoDz</p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {cards.map((c) => {
             const inner = (
               <div
